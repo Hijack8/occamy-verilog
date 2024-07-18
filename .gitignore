@@ -1,4 +1,10 @@
 *.xpr
 *.hw
 *.cache
-occamy.*
+occamy.gen
+occamy.sim
+occamy.runs
+occamy.hw
+occamy.cache
+occamy.ip_user_files
+occamy.srcs/sources_1/ip
