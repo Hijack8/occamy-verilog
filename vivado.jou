@@ -1,0 +1,54 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:37:14 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Fri Jul 19 17:17:11 2024
+# Process ID: 16240
+# Current directory: E:/verilog_proj/occamy
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent21636 E:\verilog_proj\occamy\occamy.xpr
+# Log file: E:/verilog_proj/occamy/vivado.log
+# Journal file: E:/verilog_proj/occamy\vivado.jou
+# Running On        :DESKTOP-ADFLKTL
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :22000
+# Processor Detail  :12th Gen Intel(R) Core(TM) i5-12400
+# CPU Frequency     :2496 MHz
+# CPU Physical cores:6
+# CPU Logical cores :12
+# Host memory       :16908 MB
+# Swap memory       :6985 MB
+# Total Virtual     :23894 MB
+# Available Virtual :4903 MB
+#-----------------------------------------------------------
+start_gui
+open_project E:/verilog_proj/occamy/occamy.xpr
+update_compile_order -fileset sources_1
+generate_target all [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci]
+export_ip_user_files -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -no_script -sync -force -quiet
+export_simulation -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -directory E:/verilog_proj/occamy/occamy.ip_user_files/sim_scripts -ip_user_files_dir E:/verilog_proj/occamy/occamy.ip_user_files -ipstatic_source_dir E:/verilog_proj/occamy/occamy.ip_user_files/ipstatic -lib_map_path [list {modelsim=E:/verilog_proj/occamy/occamy.cache/compile_simlib/modelsim} {questa=E:/verilog_proj/occamy/occamy.cache/compile_simlib/questa} {riviera=E:/verilog_proj/occamy/occamy.cache/compile_simlib/riviera} {activehdl=E:/verilog_proj/occamy/occamy.cache/compile_simlib/activehdl}] -use_ip_compiled_libs -force -quiet
+reset_run sfifo_ft_w128_d256_synth_1
+launch_run sfifo_ft_w128_d256_synth_1
+wait_on_run sfifo_ft_w128_d256_synth_1
+
+launch_simulation
+export_ip_user_files -of_objects  [get_files E:/verilog_proj/occamy/switch_core_tb_behav.wcfg] -no_script -reset -force -quiet
+remove_files  -fileset sim_1 E:/verilog_proj/occamy/switch_core_tb_behav.wcfg
+generate_target Simulation [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci]
+export_ip_user_files -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -no_script -sync -force -quiet
+export_simulation -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -directory E:/verilog_proj/occamy/occamy.ip_user_files/sim_scripts -ip_user_files_dir E:/verilog_proj/occamy/occamy.ip_user_files -ipstatic_source_dir E:/verilog_proj/occamy/occamy.ip_user_files/ipstatic -lib_map_path [list {modelsim=E:/verilog_proj/occamy/occamy.cache/compile_simlib/modelsim} {questa=E:/verilog_proj/occamy/occamy.cache/compile_simlib/questa} {riviera=E:/verilog_proj/occamy/occamy.cache/compile_simlib/riviera} {activehdl=E:/verilog_proj/occamy/occamy.cache/compile_simlib/activehdl}] -use_ip_compiled_libs -force -quiet
+launch_simulation
+set_property -dict [list \
+  CONFIG.Memory_Type {True_Dual_Port_RAM} \
+  CONFIG.Register_PortA_Output_of_Memory_Primitives {false} \
+  CONFIG.Register_PortB_Output_of_Memory_Primitives {false} \
+] [get_ips dpsram_w128_d2k]
+generate_target all [get_files -of_objects [get_filesets sources_1] E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/dpsram_w128_d2k/dpsram_w128_d2k.xci]
+catch { config_ip_cache -export [get_ips -all dpsram_w128_d2k] }
+export_ip_user_files -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/dpsram_w128_d2k/dpsram_w128_d2k.xci] -no_script -sync -force -quiet
+reset_run dpsram_w128_d2k_synth_1
+generate_target Simulation [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci]
+export_ip_user_files -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -no_script -sync -force -quiet
+export_simulation -of_objects [get_files E:/verilog_proj/occamy/occamy.srcs/sources_1/ip/sfifo_ft_w128_d256/sfifo_ft_w128_d256.xci] -directory E:/verilog_proj/occamy/occamy.ip_user_files/sim_scripts -ip_user_files_dir E:/verilog_proj/occamy/occamy.ip_user_files -ipstatic_source_dir E:/verilog_proj/occamy/occamy.ip_user_files/ipstatic -lib_map_path [list {modelsim=E:/verilog_proj/occamy/occamy.cache/compile_simlib/modelsim} {questa=E:/verilog_proj/occamy/occamy.cache/compile_simlib/questa} {riviera=E:/verilog_proj/occamy/occamy.cache/compile_simlib/riviera} {activehdl=E:/verilog_proj/occamy/occamy.cache/compile_simlib/activehdl}] -use_ip_compiled_libs -force -quiet
+launch_simulation
+source switch_core_tb.tcl
