@@ -72,7 +72,7 @@ switch_core core(
     .o_cell_bp(o_bp)
     );
 
-
+integer i;
 initial begin
     clk = 0;
     rstn = 0;
@@ -84,13 +84,19 @@ initial begin
     #500;
     rstn = 1;
     #500;
-    send_frame(8, 4'b0001);
-    #300;
-    send_frame(8, 4'b0100);
-    #300;
-    send_frame(8, 4'b0010);
-    #300;
-    send_frame(8, 4'b1000);
+//    send_frame(8, 4'b0001);
+//    #300;
+//    send_frame(8, 4'b0100);
+//    #300;
+//    send_frame(8, 4'b0010);
+//    #300;
+//    send_frame(8, 4'b1000);
+    
+    
+    for(i = 0; i < 10; i = i + 1) begin
+        #300;
+        send_frame(8, 4'b0001);
+    end
 end
 
 always #5 clk = ~clk;

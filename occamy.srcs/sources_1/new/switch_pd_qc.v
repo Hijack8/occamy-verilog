@@ -220,7 +220,9 @@ sram_w128_d512 u_ptr_ram (
 
 sfifo_ft_w128_d256 u_ptr_fifo0 (
   .clk(clk),
-  .rst(!rstn), 					
+  .rst(!rstn),
+  .din(ptr_fifo_din[127:0]), 	
+  .wr_en(ptr_rd_ack),  					
   .rd_en(ptr_ack), 	
   .dout(ptr_dout[127:0]), 		
   .full(ptr_full), 		

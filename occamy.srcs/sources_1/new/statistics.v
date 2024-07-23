@@ -33,7 +33,7 @@ module statistics(
     );
     
     parameter alpha_shift = 0;
-    parameter buffer_size = 32768;// B
+    parameter buffer_size = 32768;// 32KB
     
     wire [1:0] sig;
     reg [31:0] qlen[3:0];
@@ -69,5 +69,5 @@ module statistics(
     
     wire [31:0] T;
     assign T = ((buffer_size) - qlen[0] - qlen[1] - qlen[2] - qlen[3]) >> alpha_shift;
-    assign bitmap = {qlen[0] < T, qlen[1] < T, qlen[2] < T, qlen[3] < T};
+    assign bitmap = {qlen[3] < T, qlen[2] < T, qlen[1] < T, qlen[0] < T};
 endmodule
