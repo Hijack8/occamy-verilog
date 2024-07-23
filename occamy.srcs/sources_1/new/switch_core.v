@@ -91,7 +91,7 @@ wire			pd_qc_ptr_full2;
 wire			pd_qc_ptr_full3;
 reg				pd_qc_ptr_full;
 wire [9:0]		pd_ptr_dout_s;		
-reg  [15:0]		pd_qc_wr_ptr_din;	
+reg  [127:0]		pd_qc_wr_ptr_din;	
 wire            FPDQ_empty;
 
 //wire[11:0]		MC_ram_addra;	
@@ -100,6 +100,12 @@ wire            FPDQ_empty;
 //reg				MC_ram_wrb;		
 //reg  [3:0]		MC_ram_dinb;	
 //wire [3:0]		MC_ram_doutb;	
+
+// For statistics
+reg in, out;
+reg [3:0] in_port, out_port;
+reg [10:0] pkt_len_in, pkt_len_out;
+wire [3:0] bitmap;
 
 always@(posedge clk) begin
 	qc_ptr_full<=#2 ({	qc_ptr_full3,qc_ptr_full2,qc_ptr_full1, qc_ptr_full0}==4'b0)?0:1;
@@ -134,6 +140,12 @@ sfifo_ft_w16_d32 u_ptr_fifo (
 );
 
 reg first_flg;
+wire [10:0] pkt_len;
+
+reg drop;
+
+// pkt_len = cell_number * 64 B
+assign pkt_len = {cell_number, 6'd0};
 
 always@(posedge clk or negedge rstn)
 	if(!rstn)
@@ -159,6 +171,12 @@ always@(posedge clk or negedge rstn)
         pd_qc_wr_ptr_wr_en<=#2  0;
         pd_qc_wr_ptr_din<=#2  0;
         
+        
+        in <= #2 0;
+        in_port <= #2 0;
+        pkt_len_in <= #2 0;
+        drop <=#2 0;
+        
 		end
 	else
 		begin
@@ -175,27 +193,34 @@ always@(posedge clk or negedge rstn)
 			if(!i_cell_ptr_fifo_empty & !qc_ptr_full & !FQ_empty & !pd_qc_ptr_full & !FPDQ_empty)begin
 				i_cell_data_fifo_rd<=#2  1;
 				i_cell_ptr_fifo_rd<=#2  1;
-				qc_portmap<=#2 i_cell_ptr_fifo_dout[11:8];
-				FQ_rd<=#2  1;
-				FQ_dout<=#2  ptr_dout_s;
-                
-                // get free pd ptr
-                FPDQ_rd<=#2 1;
-                FPDQ_dout<=#2 pd_ptr_dout_s;
-
+                // need cell_number to write/ drop
 				cell_number[5:0]<=#2 i_cell_ptr_fifo_dout[5:0];
-				i_cell_first<=#2  1;
-                first_flg<=#2 1;
 				if(i_cell_ptr_fifo_dout[5:0]==6'b1) i_cell_last<=#2 1;
-				wr_state<=#2 1;
-				end
+                if((i_cell_ptr_fifo_dout[11:8] & bitmap) == 4'b0) begin
+                    // drop 
+                    wr_state<=#2 5;
+                    drop <=#2 1;
+                end 
+                else begin
+                    // write 
+				    FQ_rd<=#2  1;
+				    FQ_dout<=#2  ptr_dout_s;
+                    // get free pd ptr
+                    FPDQ_rd<=#2 1;
+                    FPDQ_dout<=#2 pd_ptr_dout_s;
+				    i_cell_first<=#2  1;
+                    first_flg<=#2 1;
+				    qc_portmap<=#2 i_cell_ptr_fifo_dout[11:8];
+                    wr_state<=#2 1;
+                end
 			end
+		end
 		1:begin			
 			cell_number<=#2 cell_number-1;
 			sram_cnt_a<=#2 1;
 			qc_wr_ptr_din<=#2  {i_cell_last,i_cell_first,4'b0,FQ_dout};
             // pd ptr (now cell_number has not been reduced by 1 yet)
-            pd_qc_wr_ptr_din<=#2 {cell_number[5:0], FPDQ_dout};
+            pd_qc_wr_ptr_din<=#2 {101'b0, pkt_len, cell_number[5:0], FPDQ_dout};
 
             if(qc_portmap[0])begin 
                 qc_wr_ptr_wr_en[0]<=#2  1;
@@ -253,11 +278,22 @@ always@(posedge clk or negedge rstn)
 				wr_state	<=#2 0;
 				end
 			end
+        5:begin
+            sram_cnt_a <=#2 sram_cnt_a + 1;
+            if(sram_cnt_a >= 3) begin 
+                if(cell_number == 1) begin
+                    wr_state <=#2 0;
+                    i_cell_data_fifo_rd<=#2 0;
+                end
+            end
+        end 
+
 		default:wr_state<=#2  0;
 		endcase
 		end
 
-assign  sram_wr_a=i_cell_data_fifo_rd;
+
+assign  sram_wr_a=(i_cell_data_fifo_rd & !drop);
 assign	sram_addr_a={FQ_dout[9:0],sram_cnt_a[1:0]};
 assign	sram_din_a=i_cell_data_fifo_dout[127:0];		
 
@@ -268,7 +304,7 @@ reg  [3:0]		rd_state;
 wire [15:0]		qc_rd_ptr_dout0,qc_rd_ptr_dout1,
                 qc_rd_ptr_dout2,qc_rd_ptr_dout3;
                 
-wire [15:0]     pd_qc_rd_ptr_dout0, pd_qc_rd_ptr_dout1,
+wire [127:0]     pd_qc_rd_ptr_dout0, pd_qc_rd_ptr_dout1,
                 pd_qc_rd_ptr_dout2, pd_qc_rd_ptr_dout3;
 
 reg  [1:0]		RR;
@@ -321,6 +357,11 @@ always@(posedge clk or negedge rstn)
 
         // ADD(PD)
         cell_num_reg <= 0;
+        
+        
+        out<=#2 0;
+        out_port<=#2 0;
+        pkt_len_out<=#2 0;
 		end
 	else begin
 		FQ_wr<=#2  0;
@@ -343,25 +384,25 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                        FPDQ_din<=#2 pd_qc_rd_ptr_dout0; pd_ptr_ack<=#2 4'b0001; 				
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 				
                     end
 				end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                        FPDQ_din<=#2 pd_qc_rd_ptr_dout1; pd_ptr_ack<=#2 4'b0010; 				
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                        FPDQ_din<=#2 pd_qc_rd_ptr_dout2; pd_ptr_ack<=#2 4'b0100; 				
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                        FPDQ_din<=#2 pd_qc_rd_ptr_dout3; pd_ptr_ack<=#2 4'b1000; 				
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
                     end
                 end
 				endcase
@@ -371,25 +412,25 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1; pd_ptr_ack<=#2 4'b0010; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2; pd_ptr_ack<=#2 4'b0100; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3; pd_ptr_ack<=#2 4'b1000; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0; pd_ptr_ack<=#2 4'b0001; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 				
                     end
                 end
 				endcase
@@ -399,25 +440,25 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2; pd_ptr_ack<=#2 4'b0100; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3; pd_ptr_ack<=#2 4'b1000; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0; pd_ptr_ack<=#2 4'b0001; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 				
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1; pd_ptr_ack<=#2 4'b0010; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
                     end
                 end
 				endcase
@@ -427,25 +468,25 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3; pd_ptr_ack<=#2 4'b1000; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0; pd_ptr_ack<=#2 4'b0001; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 				
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1; pd_ptr_ack<=#2 4'b0010; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2; pd_ptr_ack<=#2 4'b0100; 				
+                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
                     end
                 end
 				endcase
@@ -632,4 +673,17 @@ dpsram_w128_d2k u_data_ram (
   .enb(1), 		
   .doutb(sram_dout_b) 	
 );
+
+
+statistics sts(
+    .clk(clk),
+    .rstn(rstn),
+    .in(in),
+    .out(out),
+    .in_port(in_port),
+    .out_port(out_port),
+    .pkt_len_in(pkt_len_in),
+    .pkt_len_out(pkt_len_out),
+    .bitmap(bitmap)
+    );
 endmodule

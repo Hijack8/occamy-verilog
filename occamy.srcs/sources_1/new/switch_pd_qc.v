@@ -24,25 +24,25 @@ module switch_pd_qc(
 input					clk,
 input					rstn,
 
-input		  [15:0]	q_din,	
+input		  [127:0]	q_din,	
 input					q_wr,
 output					q_full,
 
 output					ptr_rdy,	
 input					ptr_ack,		
-output		  [15:0]	ptr_dout	
+output		  [127:0]	ptr_dout	
     );
 
-reg	  [15:0]	ptr_din;
+reg	  [127:0]	ptr_din;
 reg				ptr_wr;
 reg				q_rd;
-wire  [15:0]	q_dout;
+wire  [127:0]	q_dout;
 wire			q_empty;
 
-sfifo_w16_d32 u_ptr_wr_fifo (
+sfifo_w128_d256 u_ptr_wr_fifo (
   .clk(clk),
   .rst(!rstn), 
-  .din(q_din[15:0]), 
+  .din(q_din[127:0]), 
   .wr_en(q_wr), 
   .rd_en(q_rd),
   .dout(q_dout), 
@@ -73,7 +73,7 @@ always@(posedge clk or negedge rstn)
 			wr_state<=#2  2;
 		  end
 		2:begin
-			ptr_din<=#2  q_dout[15:0];		
+			ptr_din<=#2  q_dout[127:0];		
 			ptr_wr<=#2  1;
 			wr_state<=#2  3;
 			end
@@ -87,17 +87,17 @@ always@(posedge clk or negedge rstn)
 		end
 
 reg				ptr_rd;
-reg	  [15:0]	ptr_fifo_din;
+reg	  [127:0]	ptr_fifo_din;
 reg				ptr_rd_ack;
 
-reg	  [15:0]	head;
-reg	  [15:0]	tail;
+reg	  [127:0]	head;
+reg	  [127:0]	tail;
 reg	  [15:0]	depth_cell;
 reg   			depth_flag;
 reg	  [15:0]	depth_frame;
 
-reg	  [15:0]	ptr_ram_din;
-wire  [15:0]	ptr_ram_dout;
+reg	  [127:0]	ptr_ram_din;
+wire  [127:0]	ptr_ram_dout;
 reg				ptr_ram_wr;
 reg   [9:0]		ptr_ram_addr;
 
@@ -138,13 +138,13 @@ always@(posedge clk or negedge rstn)
 			if(depth_cell[9:0])	begin	
 				ptr_ram_wr<=#2  1;
 				ptr_ram_addr[9:0]<=#2  tail[9:0];
-				ptr_ram_din[15:0]<=#2  ptr_din[15:0];
+				ptr_ram_din[127:0]<=#2  ptr_din[127:0];
 				tail<=#2  ptr_din;
 				end
 			else begin
 				ptr_ram_wr<=#2  1;			
 				ptr_ram_addr[9:0]<=#2  ptr_din[9:0];
-				ptr_ram_din[15:0]<=#2  ptr_din[15:0];
+				ptr_ram_din[127:0]<=#2  ptr_din[127:0];
 				tail<=#2  ptr_din;
 				head<=#2  ptr_din;
 				end	
@@ -158,7 +158,7 @@ always@(posedge clk or negedge rstn)
 			end
 		2:begin
 			ptr_ram_addr<=#2  tail[9:0];
-			ptr_ram_din	<=#2  tail[15:0];
+			ptr_ram_din	<=#2  tail[127:0];
 			ptr_ram_wr<=#2  1;
 			mstate<=#2  0;
 		  end
@@ -209,7 +209,7 @@ always@(posedge clk or negedge rstn)
 		endcase
 		end
 
-sram_w16_d512 u_ptr_ram (
+sram_w128_d512 u_ptr_ram (
   .clka(clk), 			
   .wea(ptr_ram_wr),     
   .addra(ptr_ram_addr[8:0]), 
@@ -218,13 +218,11 @@ sram_w16_d512 u_ptr_ram (
   .ena(1)
 );		
 
-sfifo_ft_w16_d32 u_ptr_fifo0 (
+sfifo_ft_w128_d256 u_ptr_fifo0 (
   .clk(clk),
   .rst(!rstn), 					
-  .din(ptr_fifo_din[15:0]), 	
-  .wr_en(ptr_rd_ack), 	
   .rd_en(ptr_ack), 	
-  .dout(ptr_dout[15:0]), 		
+  .dout(ptr_dout[127:0]), 		
   .full(ptr_full), 		
   .empty(ptr_empty),
   .data_count()  
