@@ -347,6 +347,8 @@ assign pd_ptr_rd_req_pre = {pd_ptr_rdy3, pd_ptr_rdy2, pd_ptr_rdy1, pd_ptr_rdy0} 
 
 reg [5:0]   cell_num_reg;
 
+reg head_drop;
+reg [3:0] head_drop_counter;
 
 always@(posedge clk or negedge rstn)
 	if(!rstn)begin
@@ -375,24 +377,59 @@ always@(posedge clk or negedge rstn)
         out<=#2 0;
         out_port<=#2 0;
         pkt_len_out<=#2 0;
+        
+        head_drop<=#2 0;
+        head_drop_counter<=#2 0;
 		end
 	else begin
-		FQ_wr<=#2  0;
+//		FQ_wr<=#2  0;
 //		MC_ram_wrb<=#2  0;
 		o_cell_fifo_wr<=#2 sram_rd;
 		case(rd_state)
+        6:begin
+            pd_ptr_ack<=#2 0;
+
+            FPDQ_wr<=#2 0;
+            if(cell_num_reg == 0) begin
+                cell_num_reg <=#2 cell_num;
+            end
+            rd_state<=#2 7;
+            case(ptr_ack)
+            4'b0001: FQ_din<=#2 qc_rd_ptr_dout0[15:0];
+            4'b0010: FQ_din<=#2 qc_rd_ptr_dout1[15:0];
+            4'b0100: FQ_din<=#2 qc_rd_ptr_dout2[15:0];
+            4'b1000: FQ_din<=#2 qc_rd_ptr_dout3[15:0];
+            endcase
+        end	
+        7:begin
+            if(cell_num_reg == 2) begin
+                rd_state<=#2 0;
+                ptr_ack<=#2 0;
+                cell_num_reg<=#2 0;
+                FQ_wr<=#2 0;
+            end
+            else cell_num_reg <=#2 cell_num_reg - 1;
+            
+            case(ptr_ack)
+            4'b0001: FQ_din<=#2 qc_rd_ptr_dout0[15:0];
+            4'b0010: FQ_din<=#2 qc_rd_ptr_dout1[15:0];
+            4'b0100: FQ_din<=#2 qc_rd_ptr_dout2[15:0];
+            4'b1000: FQ_din<=#2 qc_rd_ptr_dout3[15:0];
+            endcase 
+        end
 		0:begin
+		    ptr_ack<=#2 0;
 		    out<=#2 0;
 			sram_rd<=#2  0;
 			sram_cnt_b<=#2  0;
 			if(ptr_rd_req_pre)	rd_state<=#2  1;	
 			end
 		1:begin
-			rd_state<=#2  2;
-			sram_rd<=#2  1;
+//			rd_state<=#2  2;
+//			sram_rd<=#2  1;
             // In pkts
             if(cell_num_reg == 0) RR<=#2 RR+2'b01;
-			case(RR)						
+			case(RR)	
 			0:begin							
 				casex(ptr_rd_req_pre[3:0])  
 				4'bxxx1:begin 
@@ -400,7 +437,15 @@ always@(posedge clk or negedge rstn)
                     if(cell_num_reg == 0) begin
                         FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001;
                         pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16]; 
-                        out_port <= #2 0;				
+                        out_port <= #2 0;	
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end		
                     end
 				end
 				4'bxx10:begin 
@@ -408,7 +453,15 @@ always@(posedge clk or negedge rstn)
                     if(cell_num_reg == 0) begin
                         FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010;
                         pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16]; 		
-                        out_port <= #2 1;		
+                        out_port <= #2 1;	
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end	
                     end
                 end
 				4'bx100:begin 
@@ -416,7 +469,15 @@ always@(posedge clk or negedge rstn)
                     if(cell_num_reg == 0) begin
                         FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 
                         pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];	
-                        out_port <= #2 2;			
+                        out_port <= #2 2;	
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end	
                     end
                 end
 				4'b1000:begin 
@@ -425,42 +486,84 @@ always@(posedge clk or negedge rstn)
                         FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 	
                         pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];		
                         out_port <= #2 3;	
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				endcase
 			end
 			1:begin
+			    out<=#2 0;
 				casex({ptr_rd_req_pre[0],ptr_rd_req_pre[3:1]})
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 	
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];		
-                    out_port <= #2 1;	
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 	
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];		
+                        out_port <= #2 1;	
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
+                        
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];		
-                    out_port <= #2 2;		
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];		
+                        out_port <= #2 2;		
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 		
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];		
-                    out_port <= #2 3;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 		
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];		
+                        out_port <= #2 3;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001;
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16]; 				
-                    out_port <= #2 0;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001;
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16]; 				
+                        out_port <= #2 0;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				endcase
@@ -470,33 +573,65 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 		
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];		
-                    out_port <= #2 2;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 		
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];		
+                        out_port <= #2 2;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 		
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];		
-                    out_port <= #2 3;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 		
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];		
+                        out_port <= #2 3;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 		
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16];		
-                    out_port <= #2 0;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 		
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16];		
+                        out_port <= #2 0;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 	
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];			
-                    out_port <= #2 1;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 	
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];			
+                        out_port <= #2 1;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				endcase
@@ -506,40 +641,76 @@ always@(posedge clk or negedge rstn)
 				4'bxxx1:begin 
                     FQ_din<=#2  qc_rd_ptr_dout3; o_cell_fifo_sel<=#2  4'b1000; ptr_ack<=#2  4'b1000; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];	
-                    out_port <= #2 3;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout3[15:0]; pd_ptr_ack<=#2 4'b1000; 				
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout3[26:16];	
+                        out_port <= #2 3;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'bxx10:begin 
                     FQ_din<=#2  qc_rd_ptr_dout0; o_cell_fifo_sel<=#2  4'b0001; ptr_ack<=#2  4'b0001; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 			
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16];		
-                    out_port <= #2 0;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout0[15:0]; pd_ptr_ack<=#2 4'b0001; 			
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout0[26:16];		
+                        out_port <= #2 0;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'bx100:begin 
                     FQ_din<=#2  qc_rd_ptr_dout1; o_cell_fifo_sel<=#2  4'b0010; ptr_ack<=#2  4'b0010; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];	
-                    out_port <= #2 1;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout1[15:0]; pd_ptr_ack<=#2 4'b0010; 				
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout1[26:16];	
+                        out_port <= #2 1;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				4'b1000:begin 
                     FQ_din<=#2  qc_rd_ptr_dout2; o_cell_fifo_sel<=#2  4'b0100; ptr_ack<=#2  4'b0100; 
                     if(cell_num_reg == 0) begin
-                    FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
-                    pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];	
-                    out_port <= #2 2;
+                        FPDQ_din<=#2 pd_qc_rd_ptr_dout2[15:0]; pd_ptr_ack<=#2 4'b0100; 				
+                        pkt_len_out<=#2 pd_qc_rd_ptr_dout2[26:16];	
+                        out_port <= #2 2;
+                        if((bitmap & 4'b0000) == 0) begin
+                            // headdrop
+                            rd_state <=#2 6;
+                        end	
+                        else begin
+                            rd_state <=#2 2;
+                            sram_rd<=#2  1;
+                        end
                     end
                 end
 				endcase
 				end
 			endcase
+			FQ_wr<=#2 1;
+			FPDQ_wr<=#2 1;
 			end
 		2:begin
+		    FQ_wr<=#2 0;
+			FPDQ_wr<=#2 0;
 			ptr_ack<=#2  0;
             if(cell_num_reg == 0) cell_num_reg<=#2 cell_num;
             pd_ptr_ack<=#2 0;
@@ -566,14 +737,40 @@ always@(posedge clk or negedge rstn)
 		5:begin
 			sram_rd<=#2  0;
             cell_num_reg<= #2 cell_num_reg - 1;
-			rd_state<=#2  0;
+			
 			if(cell_num_reg == 1) begin
 			     out<=#2 1;
 			end
+			if(ptr_rd_req_pre)	begin 
+			    rd_state<=#2  1;
+			    sram_cnt_b<=#2  0;		    
+			    sram_rd<=#2  0;
+			end
+			else rd_state<=#2  0;
 		  end
 		default:rd_state<=#2  0;
 		endcase
 		end
+
+//reg [15:0]last_ptr;
+//reg [3:0] RR_state;
+//// For pipeline
+//always@(posedge clk or negedge rstn) begin
+//    if(!rstn) begin 
+//        last_ptr<=#2 0;
+//        RR_state<=#2 0;
+//    end
+//    else begin
+//        case(RR_state)
+//        0: begin
+//        end
+//        1: begin
+//        end
+//        endcase
+//    end
+//end
+
+
 
 multi_user_fq u_fq (
 	.clk(clk), 
