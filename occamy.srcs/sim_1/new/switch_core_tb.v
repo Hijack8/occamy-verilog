@@ -65,7 +65,7 @@ switch_core core(
     .i_cell_ptr_fifo_wr(ptr_wr),
     .i_cell_bp(bp),
     .o_cell_fifo_wr(o_wr),
-    .o_cell_fifo_sel(sel),
+    .o_cell_fifo_sel(o_sel),
     .o_cell_fifo_din(o_data),
     .o_cell_first(o_first),
     .o_cell_last(o_last),

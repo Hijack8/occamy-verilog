@@ -47,9 +47,6 @@ module statistics(
         end
         else begin
             case(sig)
-            2'b00: begin
-               
-            end
             2'b01: begin
                 qlen[out_port]<=#2 qlen[out_port] - pkt_len_out; 
             end

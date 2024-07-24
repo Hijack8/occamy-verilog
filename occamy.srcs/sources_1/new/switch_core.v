@@ -27,7 +27,7 @@ input		  [127:0]	i_cell_data_fifo_din,
 input		 			i_cell_data_fifo_wr,					
 input		  [15:0]	i_cell_ptr_fifo_din,				
 input		 			i_cell_ptr_fifo_wr,					
-output	reg				i_cell_bp,
+output					i_cell_bp,
 
 output	reg				o_cell_fifo_wr,
 output	reg  [3:0]		o_cell_fifo_sel,
@@ -36,62 +36,45 @@ output					o_cell_first,
 output					o_cell_last,
 input		 [3:0]		o_cell_bp
     );
-reg 	[3:0]	qc_portmap;
-
 wire 	[127:0]	sram_din_a;				
 wire 	[127:0]	sram_dout_b;			
 wire 	[11:0]	sram_addr_a;			
 wire 	[11:0]	sram_addr_b;			
 wire			sram_wr_a;				
-		
-reg  			i_cell_data_fifo_rd;	
-wire [127:0]	i_cell_data_fifo_dout;	
-wire [8:0]		i_cell_data_fifo_depth;	
 
-reg				i_cell_ptr_fifo_rd;
-wire [15:0]		i_cell_ptr_fifo_dout;
-wire			i_cell_ptr_fifo_full;
-wire			i_cell_ptr_fifo_empty;
-reg	 [5:0]		cell_number;
-reg				i_cell_last;
-reg				i_cell_first;
 			
 reg  [15:0]		FQ_din;		
 reg				FQ_wr;
-reg				FQ_rd;
-reg  [9:0]		FQ_dout;
+wire				FQ_rd;
 
 // ADD(PD)
 reg [15:0]      FPDQ_din;
 reg             FPDQ_wr;
-reg             FPDQ_rd;
-reg [9:0]       FPDQ_dout;	
+wire             FPDQ_rd;
 
-reg	 [1:0]		sram_cnt_a;	
 reg	 [1:0]		sram_cnt_b;
 reg				sram_rd;	
 reg				sram_rd_dv;
 		
-reg  [3:0]		wr_state;		
-reg  [3:0]		qc_wr_ptr_wr_en;
+wire  [3:0]		qc_wr_ptr_wr_en;
 wire			qc_ptr_full0;
 wire			qc_ptr_full1;
 wire			qc_ptr_full2;
 wire			qc_ptr_full3;
 reg				qc_ptr_full;
 wire [9:0]		ptr_dout_s;		
-reg  [15:0]		qc_wr_ptr_din;	
+wire  [15:0]		qc_wr_ptr_din;	
 		
 wire 			FQ_empty;
 // ADD(PD)
-reg  [3:0]		pd_qc_wr_ptr_wr_en;
+wire  [3:0]		pd_qc_wr_ptr_wr_en;
 wire			pd_qc_ptr_full0;
 wire			pd_qc_ptr_full1;
 wire			pd_qc_ptr_full2;
 wire			pd_qc_ptr_full3;
 reg				pd_qc_ptr_full;
 wire [9:0]		pd_ptr_dout_s;		
-reg  [127:0]		pd_qc_wr_ptr_din;	
+wire  [127:0]		pd_qc_wr_ptr_din;	
 wire            FPDQ_empty;
 
 //wire[11:0]		MC_ram_addra;	
@@ -102,213 +85,48 @@ wire            FPDQ_empty;
 //wire [3:0]		MC_ram_doutb;	
 
 // For statistics
-reg in, out;
-reg [3:0] in_port, out_port;
-reg [10:0] pkt_len_in, pkt_len_out;
+wire in;
+reg out;
+wire [3:0] in_port;
+reg [3:0] out_port;
+wire [10:0] pkt_len_in;
+reg[10:0] pkt_len_out;
 wire [3:0] bitmap;
 
+admission ad(
+    .clk(clk),
+    .rstn(rstn),
+    .data_in(i_cell_data_fifo_din),
+    .data_wr(i_cell_data_fifo_wr),
+    .FQ_rd(FQ_rd),
+    .sram_addr(sram_addr_a),
+    .sram_wr(sram_wr_a),
+    .sram_din(sram_din_a),
+    .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en),
+    .qc_wr_ptr_din(qc_wr_ptr_din),
+//    .FQ_dout(FQ_dout),
+    .FPDQ_rd(FPDQ_rd),
+//    .FPDQ_dout(FPDQ_dout),
+    .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en),
+    .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),
+    .in(in),
+    .in_port(in_port),
+    .pkt_len_in(pkt_len_in),
+    .bitmap(bitmap),
+    .qc_ptr_full(qc_ptr_full),
+    .pd_qc_ptr_full(pd_qc_ptr_full),
+    .i_cell_bp(i_cell_bp),
+    .ptr_dout_s(ptr_dout_s),
+    .i_cell_ptr_fifo_din(i_cell_ptr_fifo_din),
+    .i_cell_ptr_fifo_wr(i_cell_ptr_fifo_wr),
+    .FQ_empty(FQ_empty),
+    .FPDQ_empty(FPDQ_empty),
+    .pd_ptr_dout_s(pd_ptr_dout_s)
+    );
 always@(posedge clk) begin
 	qc_ptr_full<=#2 ({	qc_ptr_full3,qc_ptr_full2,qc_ptr_full1, qc_ptr_full0}==4'b0)?0:1;
     pd_qc_ptr_full<= #2 ({  pd_qc_ptr_full3, pd_qc_ptr_full2, pd_qc_ptr_full1, pd_qc_ptr_full0}  == 4'b0) ? 0: 1;
 end
-
-sfifo_ft_w128_d256 u_i_cell_fifo(
-  .clk(clk), 
-  .rst(!rstn), 
-  .din(i_cell_data_fifo_din[127:0]), 
-  .wr_en(i_cell_data_fifo_wr), 
-  .rd_en(i_cell_data_fifo_rd), 
-  .dout(i_cell_data_fifo_dout[127:0]), 
-  .full(), 
-  .empty(),
-  .data_count(i_cell_data_fifo_depth[8:0])
-);
-always @(posedge clk) begin
-	i_cell_bp<=#2 (i_cell_data_fifo_depth[8:0]>161) | i_cell_ptr_fifo_full;
-end
-
-sfifo_ft_w16_d32 u_ptr_fifo (
-  .clk(clk), 					// input clk
-  .rst(!rstn), 					// input rst
-  .din(i_cell_ptr_fifo_din), 	// input [15 : 0] din
-  .wr_en(i_cell_ptr_fifo_wr), 	// input wr_en
-  .rd_en(i_cell_ptr_fifo_rd), 	// input rd_en
-  .dout(i_cell_ptr_fifo_dout), 	// output [15 : 0] dout
-  .full(i_cell_ptr_fifo_full), 	// output full
-  .empty(i_cell_ptr_fifo_empty),// output empty
-  .data_count() 				// output [5 : 0] data_count
-);
-
-reg first_flg;
-wire [10:0] pkt_len;
-
-reg drop;
-
-// pkt_len = cell_number * 64 B
-assign pkt_len = {cell_number, 6'd0};
-
-always@(posedge clk or negedge rstn)
-	if(!rstn)
-		begin
-		wr_state<=#2  0;
-		FQ_rd<=#2  0;
-//		MC_ram_wra<=#2  0;
-		sram_cnt_a<=#2  0;
-		i_cell_data_fifo_rd<=#2  0;
-		i_cell_ptr_fifo_rd<=#2 0;
-		qc_wr_ptr_wr_en<=#2  0;
-		qc_wr_ptr_din<=#2  0;
-		FQ_dout<=#2  0;
-		qc_portmap<=#2 0;
-		cell_number<=#2 0;
-		i_cell_last<=#2 0;
-		i_cell_first<=#2 0;
-        first_flg<=#2 0;
-        
-        
-        FPDQ_rd<=#2 0;
-        FPDQ_dout<=#2  0;
-        pd_qc_wr_ptr_wr_en<=#2  0;
-        pd_qc_wr_ptr_din<=#2  0;
-        
-        
-        in <= #2 0;
-        in_port <= #2 0;
-        pkt_len_in <= #2 0;
-        drop <=#2 0;
-        
-		end
-	else
-		begin
-//		MC_ram_wra<=#2  0;
-		FQ_rd<=#2  0;
-		qc_wr_ptr_wr_en<=#2  0;
-		pd_qc_wr_ptr_wr_en<=#2 0;
-		i_cell_ptr_fifo_rd<=#2  0;
-		case(wr_state)
-		0:begin
-			sram_cnt_a<=#2  0;
-			i_cell_last<=#2 0;
-			i_cell_first<=#2 0;
-			if(!i_cell_ptr_fifo_empty & !qc_ptr_full & !FQ_empty & !pd_qc_ptr_full & !FPDQ_empty)begin
-				i_cell_data_fifo_rd<=#2  1;
-				i_cell_ptr_fifo_rd<=#2  1;
-                // need cell_number to write/ drop
-				cell_number[5:0]<=#2 i_cell_ptr_fifo_dout[5:0];
-				if(i_cell_ptr_fifo_dout[5:0]==6'b1) i_cell_last<=#2 1;
-                if((i_cell_ptr_fifo_dout[11:8] & bitmap) == 4'b0) begin
-                    // drop 
-                    wr_state<=#2 5;
-                    drop <=#2 1;
-                end 
-                else begin
-                    // write 
-				    FQ_rd<=#2  1;
-				    FQ_dout<=#2  ptr_dout_s;
-                    // get free pd ptr
-                    FPDQ_rd<=#2 1;
-                    FPDQ_dout<=#2 pd_ptr_dout_s;
-				    i_cell_first<=#2  1;
-                    first_flg<=#2 1;
-				    qc_portmap<=#2 i_cell_ptr_fifo_dout[11:8];
-                    wr_state<=#2 1;
-                end
-			end
-		end
-		1:begin			
-			cell_number<=#2 cell_number-1;
-			sram_cnt_a<=#2 1;
-			qc_wr_ptr_din<=#2  {i_cell_last,i_cell_first,4'b0,FQ_dout};
-            // pd ptr (now cell_number has not been reduced by 1 yet)
-            pd_qc_wr_ptr_din<=#2 {101'b0, pkt_len, cell_number[5:0], FPDQ_dout};
-
-            if(qc_portmap[0])begin 
-                qc_wr_ptr_wr_en[0]<=#2  1;
-                if(first_flg) begin
-                    in_port<=#2 0;
-                    in <=#2 1;
-                    pd_qc_wr_ptr_wr_en[0]<=#2 1;
-                    first_flg<=#2 0;
-                end
-            end
-            if(qc_portmap[1])begin
-                qc_wr_ptr_wr_en[1]<=#2  1;
-                if(first_flg) begin
-                    in_port<=#2 1;
-                    in <=#2 1;
-                    pd_qc_wr_ptr_wr_en[1]<=#2 1;
-                    first_flg<=#2 0;
-                end
-            end
-            if(qc_portmap[2]) begin
-                qc_wr_ptr_wr_en[2]<=#2  1;
-                if(first_flg) begin 
-                    in_port<=#2 2;
-                    in <=#2 1;
-                    pd_qc_wr_ptr_wr_en[2]<=#2 1;
-                    first_flg <=#2 0;
-                end
-            end
-            if(qc_portmap[3]) begin
-                qc_wr_ptr_wr_en[3]<=#2  1;
-                if(first_flg) begin 
-                    in_port<=#2 3;
-                    in <=#2 1;
-                    pd_qc_wr_ptr_wr_en[3]<=#2 1;
-                    first_flg<=#2 0;
-                end
-            end
-//			MC_ram_wra<=#2  1;
-			wr_state<=#2  2;
-			
-			// update statistic
-			pkt_len_in<=#2 pkt_len;
-		  end
-		2:begin
-		    in<=#2 0;
-			sram_cnt_a<=#2  2;
-			wr_state<=#2  3;
-		  end
-		3:begin
-			sram_cnt_a<=#2  3;
-			wr_state<=#2  4;
-		  end
-		4:begin
-			i_cell_first<=#2  0;
-			if(cell_number) begin
-				if(!FQ_empty)begin
-					FQ_rd		<=#2  1;
-					FQ_dout		<=#2  ptr_dout_s;
-					sram_cnt_a	<=#2  0;	
-					wr_state	<=#2  1;
-					if(cell_number==1) i_cell_last<=#2 1;
-					else i_cell_last<=#2 0;
-					end
-				end
-			else begin
-				i_cell_data_fifo_rd<=#2 0;
-				wr_state	<=#2 0;
-				end
-			end
-        5:begin
-            sram_cnt_a <=#2 sram_cnt_a + 1;
-            if(sram_cnt_a >= 3) begin 
-                if(cell_number == 1) begin
-                    wr_state <=#2 0;
-                    i_cell_data_fifo_rd<=#2 0;
-                end
-                cell_number <=#2 cell_number - 1;
-            end
-        end 
-
-		default:wr_state<=#2  0;
-		endcase
-		end
-
-
-assign  sram_wr_a=(i_cell_data_fifo_rd & !drop);
-assign	sram_addr_a={FQ_dout[9:0],sram_cnt_a[1:0]};
-assign	sram_din_a=i_cell_data_fifo_dout[127:0];		
 
 //assign MC_ram_addra= {2'b0,FQ_dout[9:0]};
 //assign MC_ram_dina = qc_portmap[0]+qc_portmap[1]+qc_portmap[2]+qc_portmap[3];
