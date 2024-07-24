@@ -181,7 +181,9 @@ always@(posedge clk or negedge rstn)
 reg   [2:0]	rd_state;
 wire		ptr_full;
 wire		ptr_empty;
+wire[5:0] out_fifo_count;
 assign ptr_rdy=!ptr_empty;	
+
 
 always@(posedge clk or negedge rstn)
 	if(!rstn)
@@ -217,6 +219,9 @@ sram_w16_d512 u_ptr_ram (
   .ena(1)
 );		
 
+
+
+
 sfifo_ft_w16_d32 u_ptr_fifo0 (
   .clk(clk),
   .rst(!rstn), 					
@@ -226,6 +231,6 @@ sfifo_ft_w16_d32 u_ptr_fifo0 (
   .dout(ptr_dout[15:0]), 		
   .full(ptr_full), 		
   .empty(ptr_empty),
-  .data_count()  
+  .data_count(out_fifo_count)  
 );
 endmodule
