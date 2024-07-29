@@ -21,20 +21,20 @@
 
 
 module cell_ptr_linked_list(
-    input clk, 
-    input rstn,
-    input FQ_rd,
-    output FQ_empty,
-    output[9:0] ptr_dout_s,
-    input [3:0] qc_wr_ptr_wr_en,
-    input [15:0] qc_wr_ptr_din,
-    output reg [3:0] qc_ptr_full,
+    input               clk, 
+    input               rstn,
+    input               FQ_rd,
+    output              FQ_empty,
+    output      [9:0]   ptr_dout_s,
+    input       [3:0]   qc_wr_ptr_wr_en,
+    input       [15:0]  qc_wr_ptr_din,
+    output reg  [3:0]   qc_ptr_full,
     
-    output [3:0] ptr_rdy,
-    input [3:0] ptr_ack,
-    output [63:0] ptr_dout,
-    input FQ_wr,
-    input[15:0] FQ_din
+    output      [3:0]   ptr_rdy,
+    input       [3:0]   ptr_ack,
+    output      [63:0]  ptr_dout,
+    input               FQ_wr,
+    input       [15:0]  FQ_din
     );
     
     

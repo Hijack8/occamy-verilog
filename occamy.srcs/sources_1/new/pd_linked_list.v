@@ -27,7 +27,7 @@ module pd_linked_list(
     output FPDQ_empty,
     output [9:0] pd_ptr_dout_s,
     input [3:0]pd_qc_wr_ptr_wr_en,
-    input [15:0]pd_qc_wr_ptr_din,
+    input [127:0]pd_qc_wr_ptr_din,
     output reg [3:0]pd_qc_ptr_full,
     output [3:0]pd_ptr_rdy,
     input [3:0] pd_ptr_ack,

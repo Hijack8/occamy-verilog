@@ -32,60 +32,8 @@ input					ptr_ack,
 output		  [15:0]	ptr_dout	
     );
 
-reg	  [15:0]	ptr_din;
-reg				ptr_wr;
-reg				q_rd;
-wire  [15:0]	q_dout;
-wire			q_empty;
+assign q_full = 0;
 
-sfifo_w16_d32 u_ptr_wr_fifo (
-  .clk(clk),
-  .rst(!rstn), 
-  .din(q_din[15:0]), 
-  .wr_en(q_wr), 
-  .rd_en(q_rd),
-  .dout(q_dout), 
-  .full(q_full),
-  .empty(q_empty),
-  .data_count()
-);		
-
-reg	  [1:0]		wr_state;
-reg				ptr_wr_ack;
-always@(posedge clk or negedge rstn)
-	if(!rstn)begin
-		ptr_din<=#2  0;
-		ptr_wr<=#2  0;
-		q_rd<=#2  0;
-		wr_state<=#2  0;
-		end
-	else begin
-		case(wr_state)			
-		0:begin					
-			if(!q_empty)begin
-				q_rd<=#2  1;
-				wr_state<=#2  1;
-				end
-		  end
-		1:begin
-			q_rd<=#2  0;
-			wr_state<=#2  2;
-		  end
-		2:begin
-			ptr_din<=#2  q_dout[15:0];		
-			ptr_wr<=#2  1;
-			wr_state<=#2  3;
-			end
-		3:begin
-			if(ptr_wr_ack)begin	
-				ptr_wr<=#2  0;
-				wr_state<=#2  0;
-				end
-			end
-		endcase
-		end
-
-reg				ptr_rd;
 reg	  [15:0]	ptr_fifo_din;
 reg				ptr_rd_ack;
 
@@ -100,13 +48,20 @@ wire  [15:0]	ptr_ram_dout;
 reg				ptr_ram_wr;
 reg   [9:0]		ptr_ram_addr;
 
-reg	  [3:0]		mstate;
+reg [15:0] ptr_ram_din_b;
+wire[15:0] ptr_ram_dout_b;
+reg ptr_ram_wr_b;
+reg [9:0] ptr_ram_addr_b;
+
+
+wire [1:0] sig;
+assign sig = {q_wr, ptr_ack};
+assign ptr_dout = head;
+assign ptr_rdy = depth_flag;
 
 always@(posedge clk or negedge rstn)
 	if(!rstn)	begin
-		mstate<=#2  0;
 		ptr_ram_wr<=#2  0;
-		ptr_wr_ack<=#2  0;
 		head <=#2  0;	
 		tail <=#2  0;	
 		depth_cell <=#2  0;	
@@ -116,121 +71,89 @@ always@(posedge clk or negedge rstn)
 		ptr_ram_addr<=#2  0;
 		ptr_fifo_din<=#2  0;
 		depth_flag<=#2 0;
+		
+		ptr_ram_din_b<=#2 0;
+	    ptr_ram_wr_b<=#2 0;
+	    ptr_ram_addr_b<=#2 0;
+	    
 		end
 	else begin
-		ptr_wr_ack<=#2  0;	
-		ptr_rd_ack<=#2  0;	
-		ptr_ram_wr<=#2  0;	
-		case(mstate)					
-		0:begin							
-			if(ptr_wr)begin
-				mstate<=#2  1;
-				end
-			else if(ptr_rd)
-				begin					
-				ptr_fifo_din<=#2  head;
-				ptr_ram_addr[9:0]<=#2  head[9:0];
-				mstate<=#2  3;
-				end
-		  end
-		1:begin
-			if(depth_cell[9:0])	begin	
-				ptr_ram_wr<=#2  1;
-				ptr_ram_addr[9:0]<=#2  tail[9:0];
-				ptr_ram_din[15:0]<=#2  ptr_din[15:0];
-				tail<=#2  ptr_din;
-				end
-			else begin
-				ptr_ram_wr<=#2  1;			
-				ptr_ram_addr[9:0]<=#2  ptr_din[9:0];
-				ptr_ram_din[15:0]<=#2  ptr_din[15:0];
-				tail<=#2  ptr_din;
-				head<=#2  ptr_din;
-				end	
-			depth_cell<=#2 depth_cell+1;
-			if(ptr_din[15])	begin		
-				depth_flag<=#2 1;
-				depth_frame<=#2 depth_frame+1;
-				end
-			ptr_wr_ack<=#2  1;				
-			mstate<=#2  2;
-			end
-		2:begin
-			ptr_ram_addr<=#2  tail[9:0];
-			ptr_ram_din	<=#2  tail[15:0];
-			ptr_ram_wr<=#2  1;
-			mstate<=#2  0;
-		  end
-		3:begin
-			ptr_rd_ack<=#2  1;				
-			mstate<=#2  4;
-		  end
-		4:begin
-			head<=#2  ptr_ram_dout;
+	    ptr_ram_addr_b[9:0]<=#2  head[9:0];
+        case(sig)
+        2'b00: begin
+            ptr_ram_wr<=#2  0;
+        end
+        2'b01: begin
+            // read
+			head<=#2  ptr_ram_dout_b;
 			depth_cell<=#2 depth_cell-1;
 			if(head[15]) begin
 				depth_frame<=#2  depth_frame-1;
 				if(depth_frame>1) depth_flag<=#2 1;
 				else depth_flag<=#2 0;
 				end
-			mstate<=#2  0;
-		  end
+        end
+        2'b10: begin
+            // write
+            if(depth_cell[9:0])	begin	
+				ptr_ram_wr<=#2  1;
+				ptr_ram_addr[9:0]<=#2  tail[9:0];
+				ptr_ram_din[15:0]<=#2  q_din[15:0];
+				tail<=#2  q_din;
+				end
+			else begin
+				ptr_ram_wr<=#2  1;			
+				ptr_ram_addr[9:0]<=#2  q_din[9:0];
+				ptr_ram_din[15:0]<=#2  q_din[15:0];
+				tail<=#2  q_din;
+				head<=#2  q_din;
+				end	
+			depth_cell<=#2 depth_cell+1;
+			if(q_din[15])	begin		
+				depth_flag<=#2 1;
+				depth_frame<=#2 depth_frame+1;
+				end
+        end
+        2'b11: begin
+            // read && write
+            if(depth_cell[9:0]) begin
+				ptr_ram_wr<=#2  1;
+				ptr_ram_addr[9:0]<=#2  tail[9:0];
+				ptr_ram_din[15:0]<=#2  q_din[15:0];
+				tail<=#2  q_din;
+			    if(q_din[15])	begin		
+                    depth_flag<=#2 1;
+                    depth_frame<=#2 depth_frame+1;
+                    end
+                
+                head<=#2  ptr_ram_dout_b;
+                depth_cell<=#2 depth_cell-1;
+                if(head[15]) begin
+                    depth_frame<=#2  depth_frame-1;
+                    if(depth_frame>1) depth_flag<=#2 1;
+                    else depth_flag<=#2 0;
+                    end
+            end 
+            else begin
+                ptr_ram_wr<=#2 0;
+                head<=#2 q_din;
+            end
+        end
 		endcase
 		end
-		
-reg   [2:0]	rd_state;
-wire		ptr_full;
-wire		ptr_empty;
-wire[5:0] out_fifo_count;
-assign ptr_rdy=!ptr_empty;	
-
-
-always@(posedge clk or negedge rstn)
-	if(!rstn)
-		begin
-		ptr_rd<=#2  0;	
-		rd_state<=#2  0;
-		end
-	else
-		begin
-		case(rd_state)					
-		0:begin							
-			if(depth_flag && !ptr_full)begin
-				rd_state<=#2  1;
-				ptr_rd<=#2  1;
-				end
-		  end
-		1:begin
-			if(ptr_rd_ack)begin
-				ptr_rd<=#2  0;
-				rd_state<=#2  2;
-				end
-			end
-		2:rd_state<=#2  0;
-		endcase
-		end
-
-sram_w16_d512 u_ptr_ram (
+dpsram_w16_d512 u_ptr_ram (
   .clka(clk), 			
   .wea(ptr_ram_wr),     
   .addra(ptr_ram_addr[8:0]), 
   .dina(ptr_ram_din),   
   .douta(ptr_ram_dout),
-  .ena(1)
+  .ena(1),
+  
+  .clkb(clk),
+  .web(ptr_ram_wr_b),
+  .addrb(ptr_ram_addr_b),
+  .dinb(ptr_ram_din_b),
+  .doutb(ptr_ram_dout_b),
+  .enb(1)
 );		
-
-
-
-
-sfifo_ft_w16_d32 u_ptr_fifo0 (
-  .clk(clk),
-  .rst(!rstn), 					
-  .din(ptr_fifo_din[15:0]), 	
-  .wr_en(ptr_rd_ack), 	
-  .rd_en(ptr_ack), 	
-  .dout(ptr_dout[15:0]), 		
-  .full(ptr_full), 		
-  .empty(ptr_empty),
-  .data_count(out_fifo_count)  
-);
 endmodule
