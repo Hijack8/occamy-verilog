@@ -1,13 +1,13 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "sram_w16_d512",
+    "xci_name": "sram_w32_d512",
     "component_reference": "xilinx.com:ip:blk_mem_gen:8.4",
     "ip_revision": "8",
-    "gen_directory": "../../../../occamy.gen/sources_1/ip/sram_w16_d512_1",
+    "gen_directory": "../../../../occamy.gen/sources_1/ip/sram_w32_d512",
     "parameters": {
       "component_parameters": {
-        "Component_Name": [ { "value": "sram_w16_d512", "resolve_type": "user", "usage": "all" } ],
+        "Component_Name": [ { "value": "sram_w32_d512", "resolve_type": "user", "usage": "all" } ],
         "Interface_Type": [ { "value": "Native", "resolve_type": "user", "usage": "all" } ],
         "AXI_Type": [ { "value": "AXI4_Full", "resolve_type": "user", "usage": "all" } ],
         "AXI_Slave_Type": [ { "value": "Memory_Slave", "resolve_type": "user", "usage": "all" } ],
@@ -32,7 +32,7 @@
         "Algorithm": [ { "value": "Minimum_Area", "resolve_type": "user", "usage": "all" } ],
         "Primitive": [ { "value": "8kx2", "resolve_type": "user", "enabled": false, "usage": "all" } ],
         "Assume_Synchronous_Clk": [ { "value": "false", "resolve_type": "user", "format": "bool", "enabled": false, "usage": "all" } ],
-        "Write_Width_A": [ { "value": "16", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "Write_Width_A": [ { "value": "16", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Write_Depth_A": [ { "value": "512", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Read_Width_A": [ { "value": "16", "resolve_type": "user", "usage": "all" } ],
         "Operating_Mode_A": [ { "value": "WRITE_FIRST", "resolve_type": "user", "usage": "all" } ],
@@ -98,7 +98,7 @@
         "C_PRIM_TYPE": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_LOAD_INIT_FILE": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_INIT_FILE_NAME": [ { "value": "no_coe_file_loaded", "resolve_type": "generated", "usage": "all" } ],
-        "C_INIT_FILE": [ { "value": "sram_w16_d512.mem", "resolve_type": "generated", "usage": "all" } ],
+        "C_INIT_FILE": [ { "value": "sram_w32_d512.mem", "resolve_type": "generated", "usage": "all" } ],
         "C_USE_DEFAULT_DATA": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_DEFAULT_DATA": [ { "value": "0", "resolve_type": "generated", "usage": "all" } ],
         "C_HAS_RSTA": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -175,7 +175,7 @@
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "8" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../occamy.gen/sources_1/ip/sram_w16_d512_1" } ],
+        "OUTPUTDIR": [ { "value": "../../../../occamy.gen/sources_1/ip/sram_w32_d512" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
         "SWVERSION": [ { "value": "2024.1" } ],

@@ -31,7 +31,7 @@ module cell_read(
     
     input [3:0] pd_ptr_rdy,
     output reg[3:0] pd_ptr_ack,
-    input [63:0]pd_ptr_dout,
+    input [511:0]pd_ptr_dout,
     output reg FPDQ_wr,
     output [15:0] pd_ptr_din,
     
