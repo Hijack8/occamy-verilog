@@ -34,7 +34,10 @@ module cell_ptr_linked_list(
     input       [3:0]   ptr_ack,
     output      [63:0]  ptr_dout,
     input               FQ_wr,
-    input       [15:0]  FQ_din
+    input       [15:0]  FQ_din,
+
+    input [3:0] headdrop,
+    output [3:0] headdrop_buzy
     );
     
     
@@ -52,6 +55,14 @@ end
 assign	{ptr_ack3,ptr_ack2,ptr_ack1,ptr_ack0}=ptr_ack;
 
 assign ptr_rdy = {ptr_rdy3, ptr_rdy2, ptr_rdy1, ptr_rdy0};
+
+wire headdrop0, headdrop1, headdrop2, headdrop3;
+assign {headdrop3, headdrop2, headdrop1, headdrop0} = headdrop;
+wire headdrop_buzy0, headdrop_buzy1, headdrop_buzy2, headdrop_buzy3;
+assign headdrop_buzy = {headdrop_buzy3, headdrop_buzy2, headdrop_buzy1, headdrop_buzy0};
+
+
+
 
 multi_user_fq u_fq (
 	.clk(clk), 
@@ -71,7 +82,10 @@ switch_qc qc0(
 	.q_full(qc_ptr_full0), 
 	.ptr_rdy(ptr_rdy0),
 	.ptr_ack(ptr_ack0),
-	.ptr_dout(qc_rd_ptr_dout0)
+	.ptr_dout(qc_rd_ptr_dout0),
+
+    .headdrop(headdrop0),
+    .headdrop_buzy(headdrop_buzy0)
 );
 
 switch_qc qc1(
@@ -84,7 +98,10 @@ switch_qc qc1(
 	
 	.ptr_rdy(ptr_rdy1),
 	.ptr_ack(ptr_ack1),
-	.ptr_dout(qc_rd_ptr_dout1)
+	.ptr_dout(qc_rd_ptr_dout1),
+
+    .headdrop(headdrop1),
+    .headdrop_buzy(headdrop_buzy1)
 );
 
 switch_qc qc2(
@@ -97,7 +114,10 @@ switch_qc qc2(
 	
 	.ptr_rdy(ptr_rdy2),
 	.ptr_ack(ptr_ack2),
-	.ptr_dout(qc_rd_ptr_dout2)
+	.ptr_dout(qc_rd_ptr_dout2),
+
+    .headdrop(headdrop2),
+    .headdrop_buzy(headdrop_buzy2)
 );
 
 switch_qc qc3(
@@ -110,6 +130,35 @@ switch_qc qc3(
 	
 	.ptr_rdy(ptr_rdy3),
 	.ptr_ack(ptr_ack3),
-	.ptr_dout(qc_rd_ptr_dout3)
+	.ptr_dout(qc_rd_ptr_dout3),
+
+    .headdrop(headdrop3),
+    .headdrop_buzy(headdrop_buzy3)
 );
+
+
+wire 	[31:0]	sram_din_a;				
+wire 	[31:0]	sram_dout_b;			
+wire 	[10:0]	sram_addr_a;			
+wire 	[10:0]	sram_addr_b;			
+wire			sram_wr_a;	
+wire sram_wr_b;
+
+
+dpsram_w32_d512 u_ptr_ram(
+  .clka(clk), 			
+  .wea(sram_wr_a), 		
+  .addra(sram_addr_a[10:0]),	
+  .dina(sram_din_a), 	
+  .douta(), 			
+  .clkb(clk), 		
+  .web(sram_wr_b), 			
+  .addrb(sram_addr_b[10:0]), 	
+  .dinb(sram_din_b),
+  .ena(1),
+  .enb(1), 		
+  .doutb(sram_dout_b) 
+)
+
+
 endmodule

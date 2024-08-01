@@ -84,6 +84,15 @@ wire    [3:0]   pd_ptr_rdy;
 wire    [3:0]   pd_ptr_ack;
 wire    [511:0] pdll_ptr_dout;
 
+
+reg [3:0] headdrop;
+wire [3:0] headdrop_buzy;
+
+initial begin 
+    headdrop= 0;
+end
+
+
 admission ad(
     .clk(clk),
     .rstn(rstn),
@@ -95,7 +104,8 @@ admission ad(
     .sram_din(sram_din_a),
     .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en),
     .qc_wr_ptr_din(qc_wr_ptr_din),
-    .FPDQ_rd(FPDQ_rd),
+//    .FPDQ_rd(FPDQ_rd),
+    .pd_FQ_rd(FPDQ_rd),
     .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en),
     .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),
     .in(in),
@@ -109,7 +119,8 @@ admission ad(
     .i_cell_ptr_fifo_din(i_cell_ptr_fifo_din),
     .i_cell_ptr_fifo_wr(i_cell_ptr_fifo_wr),
     .FQ_empty(FQ_empty),
-    .FPDQ_empty(FPDQ_empty),
+//    .FPDQ_empty(FPDQ_empty),
+    .pd_FQ_empty(FPDQ_empty),
     .pd_ptr_dout_s(pd_ptr_dout_s)
     );
 
@@ -142,6 +153,35 @@ cell_read cr(
     );
 
 
+wire hd_FQ_wr;
+wire [15:0] hd_FQ_din;
+wire hd_FPDQ_wr;
+wire [127:0] hd_FPDQ_din;
+wire [3:0] hd_pd_ptr_ack;
+wire [3:0] fail;
+wire [1:0] headdrop_out_port;
+wire headdrop_out;
+wire [10:0] headdrop_pkt_len_out;
+
+headdrop hd(
+    .clk(clk),
+    .rstn(rstn),
+    .ptr_rdy(cell_ptr_rdy),
+    .headdrop_en(headdrop),
+    .FQ_wr(hd_FQ_wr),
+    .FQ_din(hd_FQ_din),
+    .pd_ptr_rdy(pd_ptr_rdy),
+    .pd_ptr_ack(hd_pd_ptr_ack),
+    .FPDQ_wr(hd_FPDQ_wr),
+    .FPDQ_din(hd_FPDQ_din),
+    .cell_ptr_dout(cpll_ptr_dout),
+    .pd_dout(pdll_ptr_dout),
+    .fail(fail),
+    .bitmap(bitmap),
+    .out_port(headdrop_out_port),
+    .out(headdrop_out),
+    .pkt_len_out(headdrop_pkt_len_out)
+);
 
 cell_ptr_linked_list cpll(
     .clk(clk),
@@ -156,7 +196,10 @@ cell_ptr_linked_list cpll(
     .ptr_ack(cell_ptr_ack),
     .ptr_dout(cpll_ptr_dout),
     .FQ_wr(FQ_wr),
-    .FQ_din(FQ_din)
+    .FQ_din(FQ_din),
+
+    .headdrop(headdrop),
+    .headdrop_buzy(headdrop_buzy)
     );
 
 
@@ -194,6 +237,9 @@ dpsram_w128_d2k u_data_ram (
 );
 
 
+
+
+
 statistics sts(
     .clk(clk),
     .rstn(rstn),
@@ -203,6 +249,10 @@ statistics sts(
     .out_port(out_port),
     .pkt_len_in(pkt_len_in),
     .pkt_len_out(pkt_len_out),
+
+    .headdrop_out(headdrop_out),
+    .headdrop_out_port(headdrop_out_port),
+    .headdrop_pkt_len_out(headdrop_pkt_len_out),
     .bitmap(bitmap)
     );
 endmodule

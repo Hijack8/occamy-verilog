@@ -29,15 +29,20 @@ module statistics(
     input [3:0] out_port,
     input[10:0] pkt_len_in,
     input[10:0] pkt_len_out,
+
+    input headdrop_out,
+    input [3:0] headdrop_out_port,
+    input [10:0] headdrop_pkt_len_out,
+
     output[3:0] bitmap
     );
     
     parameter alpha_shift = 0;
     parameter buffer_size = 32768;// 32KB
     
-    wire [1:0] sig;
+    wire [2:0] sig;
     reg [31:0] qlen[3:0];
-    assign sig = {in, out};
+    assign sig = {in, out, headdrop_out};
     always@(posedge clk or negedge rstn) begin
         if(!rstn) begin
             qlen[0]<=#2 0;
@@ -47,17 +52,45 @@ module statistics(
         end
         else begin
             case(sig)
-            2'b01: begin
+            3'b001: begin
+                qlen[headdrop_out_port]<=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
+            end
+            3'b010: begin
                 qlen[out_port]<=#2 qlen[out_port] - pkt_len_out; 
             end
-            2'b10: begin
+            3'b011: begin
+                if(headdrop_out_port == out_port) qlen[out_port]<=#2 qlen[out_port] - pkt_len_out - headdrop_pkt_len_out;
+                else begin 
+                    qlen[out_port] <=#2 qlen[out_port] - pkt_len_out;
+                    qlen[headdrop_out_port]<=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
+                end
+            end
+            3'b100: begin
                 qlen[in_port] <=#2 qlen[in_port] + pkt_len_in;
             end
-            2'b11: begin
+            3'b101: begin
+                if(headdrop_out_port == in_port) qlen[in_port]<=#2 qlen[in_port] + pkt_len_in - headdrop_pkt_len_out;
+                else begin 
+                    qlen[headdrop_out_port]<=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
+                    qlen[in_port] <=#2 qlen[in_port] + pkt_len_in;
+                end
+            end
+            3'b110: begin
                 if(in_port == out_port) qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out;
                 else begin
                     qlen[in_port] <=#2 qlen[in_port] + pkt_len_in;
                     qlen[out_port] <=#2 qlen[out_port] - pkt_len_out;
+                end
+            end
+            3'b111: begin
+                if(in_port == out_port && in_port == headdrop_out_port)  qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out - headdrop_pkt_len_out;
+                else if(in_port == out_port) qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out;
+                else if(headdrop_out_port == in_port) qlen[in_port]<=#2 qlen[in_port] + pkt_len_in - headdrop_pkt_len_out;
+                else if(headdrop_out_port == out_port) qlen[out_port]<=#2 qlen[out_port] - pkt_len_out - headdrop_pkt_len_out;
+                else begin 
+                    qlen[headdrop_out_port]<=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
+                    qlen[out_port] <=#2 qlen[out_port] - pkt_len_out;
+                    qlen[in_port] <=#2 qlen[in_port] + pkt_len_in;
                 end
             end
             endcase
