@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_admission_cell_ptr_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_admission_cell_ptr" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="6,248.088 ns"></ZoomStartTime>
+      <ZoomEndTime time="6,478.489 ns"></ZoomEndTime>
+      <Cursor1Time time="6,302.744 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="292"></NameColumnWidth>
+      <ValueColumnWidth column_width="73"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="8" />
+   <wvobject fp_name="/tb_admission_cell_ptr/uut1/wr_state" type="array">
+      <obj_property name="ElementShortName">wr_state[3:0]</obj_property>
+      <obj_property name="ObjectShortName">wr_state[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_admission_cell_ptr/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_admission_cell_ptr/rstn" type="logic">
+      <obj_property name="ElementShortName">rstn</obj_property>
+      <obj_property name="ObjectShortName">rstn</obj_property>
+   </wvobject>
+   <wvobject fp_name="group268" type="group">
+      <obj_property name="label">pre -&gt; admission</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group267" type="group">
+         <obj_property name="label">read into fifo</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_ptr_fifo_wr" type="logic">
+            <obj_property name="ElementShortName">i_cell_ptr_fifo_wr</obj_property>
+            <obj_property name="ObjectShortName">i_cell_ptr_fifo_wr</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_ptr_fifo_din" type="array">
+            <obj_property name="ElementShortName">i_cell_ptr_fifo_din[15:0]</obj_property>
+            <obj_property name="ObjectShortName">i_cell_ptr_fifo_din[15:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/data_wr" type="logic">
+            <obj_property name="ElementShortName">data_wr</obj_property>
+            <obj_property name="ObjectShortName">data_wr</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/data_in" type="array">
+            <obj_property name="ElementShortName">data_in[127:0]</obj_property>
+            <obj_property name="ObjectShortName">data_in[127:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_bp" type="logic">
+            <obj_property name="ElementShortName">i_cell_bp</obj_property>
+            <obj_property name="ObjectShortName">i_cell_bp</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group266" type="group">
+         <obj_property name="label">read from fifo</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_data_fifo_rd" type="logic">
+            <obj_property name="ElementShortName">i_cell_data_fifo_rd</obj_property>
+            <obj_property name="ObjectShortName">i_cell_data_fifo_rd</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_data_fifo_dout" type="array">
+            <obj_property name="ElementShortName">i_cell_data_fifo_dout[127:0]</obj_property>
+            <obj_property name="ObjectShortName">i_cell_data_fifo_dout[127:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_ptr_fifo_rd" type="logic">
+            <obj_property name="ElementShortName">i_cell_ptr_fifo_rd</obj_property>
+            <obj_property name="ObjectShortName">i_cell_ptr_fifo_rd</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/i_cell_ptr_fifo_dout" type="array">
+            <obj_property name="ElementShortName">i_cell_ptr_fifo_dout[15:0]</obj_property>
+            <obj_property name="ObjectShortName">i_cell_ptr_fifo_dout[15:0]</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group214" type="group">
+      <obj_property name="label">qc</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group99" type="group">
+         <obj_property name="label">queue collector</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/tb_admission_cell_ptr/qc_ptr_full" type="logic">
+            <obj_property name="ElementShortName">qc_ptr_full</obj_property>
+            <obj_property name="ObjectShortName">qc_ptr_full</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/qc_wr_ptr_wr_en" type="array">
+            <obj_property name="ElementShortName">qc_wr_ptr_wr_en[3:0]</obj_property>
+            <obj_property name="ObjectShortName">qc_wr_ptr_wr_en[3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/qc_wr_ptr_din" type="array">
+            <obj_property name="ElementShortName">qc_wr_ptr_din[15:0]</obj_property>
+            <obj_property name="ObjectShortName">qc_wr_ptr_din[15:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group100" type="group">
+         <obj_property name="label">from free queue</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut2/fq_rd_state" type="array">
+            <obj_property name="ElementShortName">fq_rd_state[2:0]</obj_property>
+            <obj_property name="ObjectShortName">fq_rd_state[2:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/FQ_empty" type="logic">
+            <obj_property name="ElementShortName">FQ_empty</obj_property>
+            <obj_property name="ObjectShortName">FQ_empty</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/FQ_rd" type="logic">
+            <obj_property name="ElementShortName">FQ_rd</obj_property>
+            <obj_property name="ObjectShortName">FQ_rd</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/ptr_dout_s" type="array">
+            <obj_property name="ElementShortName">ptr_dout_s[9:0]</obj_property>
+            <obj_property name="ObjectShortName">ptr_dout_s[9:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut1/FQ_dout" type="array">
+            <obj_property name="ElementShortName">FQ_dout[9:0]</obj_property>
+            <obj_property name="ObjectShortName">FQ_dout[9:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut2/FQ_head" type="array">
+            <obj_property name="ElementShortName">FQ_head[9:0]</obj_property>
+            <obj_property name="ObjectShortName">FQ_head[9:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut2/ram_out_data_b" type="array">
+            <obj_property name="ElementShortName">ram_out_data_b[31:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_out_data_b[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut2/ptr_dout_s" type="array">
+            <obj_property name="ElementShortName">ptr_dout_s[9:0]</obj_property>
+            <obj_property name="ObjectShortName">ptr_dout_s[9:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_admission_cell_ptr/uut2/ram_addr_b" type="array">
+            <obj_property name="ElementShortName">ram_addr_b[8:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_addr_b[8:0]</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group213" type="group">
+      <obj_property name="label">pd</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/tb_admission_cell_ptr/pd_FQ_rd" type="logic">
+         <obj_property name="ElementShortName">pd_FQ_rd</obj_property>
+         <obj_property name="ObjectShortName">pd_FQ_rd</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/pd_ptr_dout_s" type="array">
+         <obj_property name="ElementShortName">pd_ptr_dout_s[9:0]</obj_property>
+         <obj_property name="ObjectShortName">pd_ptr_dout_s[9:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/pd_qc_wr_ptr_wr_en" type="array">
+         <obj_property name="ElementShortName">pd_qc_wr_ptr_wr_en[3:0]</obj_property>
+         <obj_property name="ObjectShortName">pd_qc_wr_ptr_wr_en[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/pd_qc_wr_ptr_din" type="array">
+         <obj_property name="ElementShortName">pd_qc_wr_ptr_din[127:0]</obj_property>
+         <obj_property name="ObjectShortName">pd_qc_wr_ptr_din[127:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group98" type="group">
+      <obj_property name="label">cell data memory</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_admission_cell_ptr/sram_din" type="array">
+         <obj_property name="ElementShortName">sram_din[127:0]</obj_property>
+         <obj_property name="ObjectShortName">sram_din[127:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/sram_addr" type="array">
+         <obj_property name="ElementShortName">sram_addr[11:0]</obj_property>
+         <obj_property name="ObjectShortName">sram_addr[11:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/sram_wr" type="logic">
+         <obj_property name="ElementShortName">sram_wr</obj_property>
+         <obj_property name="ObjectShortName">sram_wr</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group167" type="group">
+      <obj_property name="label">cell pointer memory</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_admission_cell_ptr/uut2/qc_wr_state" type="array">
+         <obj_property name="ElementShortName">qc_wr_state[2:0]</obj_property>
+         <obj_property name="ObjectShortName">qc_wr_state[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/uut2/ram_addr_b" type="array">
+         <obj_property name="ElementShortName">ram_addr_b[8:0]</obj_property>
+         <obj_property name="ObjectShortName">ram_addr_b[8:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/uut2/ram_in_data_b" type="array">
+         <obj_property name="ElementShortName">ram_in_data_b[31:0]</obj_property>
+         <obj_property name="ObjectShortName">ram_in_data_b[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_admission_cell_ptr/uut2/ram_in_enable_b" type="logic">
+         <obj_property name="ElementShortName">ram_in_enable_b</obj_property>
+         <obj_property name="ObjectShortName">ram_in_enable_b</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
