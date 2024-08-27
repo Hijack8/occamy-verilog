@@ -78,11 +78,12 @@ always@(posedge clk) qc_ptr_full <= 0;
         if(!rstn) begin
             fq_rd_state                 <= #2 0;
             ram_out_enable_b<=#2 0;
+            ram_addr_b_1 <=#2 0;
         end else begin
             case(fq_rd_state)
                 0:  begin
                     if(main_state != RST && FQ_rd && !FQ_empty) begin
-                        ram_addr_b          <= #2 FQ_head;
+                        ram_addr_b_1          <= #2 FQ_head;
                         ram_out_enable_b    <= #2 1;
                         fq_rd_state         <= #2 1;
                     end
@@ -100,11 +101,14 @@ always@(posedge clk) qc_ptr_full <= 0;
     always@(posedge clk or negedge rstn) begin
         if(!rstn) begin
             fq_wr_state                 <= #2 0;
+            ram_addr_a_1 <=#2 0;
+            ram_in_enable_a <=#2 0;
+            ram_in_data_a <=#2 0;
         end else begin
             case(fq_wr_state)
                 0:  begin
                     if(main_state != RST && FQ_wr) begin
-                        ram_addr_a          <= #2 FQ_tail;
+                        ram_addr_a_1          <= #2 FQ_tail;
                         ram_in_data_a       <= #2 {FQ_din_head,7'b0,FQ_tail};
                         ram_in_enable_a     <= #2 1;
                                      
@@ -133,13 +137,13 @@ always@(posedge clk) qc_ptr_full <= 0;
         if(!rstn) begin
             qc_wr_state         <= #2 0;
             ram_in_enable_b<=#2 0;
-            ram_addr_b<=#2 0;
+            ram_addr_b_2<=#2 0;
             ram_in_data_b<=#2 0;
         end else begin // 先不考虑多播
             case(qc_wr_state)
                 0:  begin
                     if(main_state != RST && qc_wr_ptr_wr_en) begin    
-                        ram_addr_b          <= #2 qc_wr_preptr_din[8:0];
+                        ram_addr_b_2          <= #2 qc_wr_preptr_din[8:0];
                         ram_in_data_b       <= #2 {qc_wr_ptr_din, qc_wr_preptr_din};
                         if(!qc_wr_ptr_din[14])
                             ram_in_enable_b         <= #2 1;
@@ -172,19 +176,21 @@ always@(posedge clk) qc_ptr_full <= 0;
             qc_rd_state                 <= #2 0;
             cell_mem_dout<=#2 0;
             ram_out_enable_a<=#2 0;
+            ram_addr_a_2 <=#2 0;
         end else begin
             case(qc_rd_state)
                 0:  begin
                     if(main_state != RST && cell_mem_rd) begin
-                        ram_addr_a                      <= #2 cell_mem_addr; 
+                        ram_addr_a_2                      <= #2 cell_mem_addr; 
                         ram_out_enable_a                <= #2 1;
                         qc_rd_state                     <= #2 1;
                     end
+                    // else ram_out_enable_a <=#2 0;
                 end
                 1:  begin
                     #1 cell_mem_dout <= ram_out_data_a;
-                    ram_out_enable_a                    <= #2 0;
                     qc_rd_state                         <= #2 0;
+                    ram_out_enable_a <=#2 0;
                 end
             endcase
         end
@@ -217,23 +223,23 @@ always@(posedge clk) qc_ptr_full <= 0;
                 RST: begin
                     if(rst_index == 511) begin
                         rst_index           <= #2 0;
-                        ram_in_data_a       <= #2 {23'b0,rst_index[8:0]};
-                        ram_addr_a          <= #2 rst_index;
-                        ram_in_enable_a     <= #2 1;
+                        ram_in_data_a_rst       <= #2 {23'b0,rst_index[8:0]};
+                        ram_addr_a_rst          <= #2 rst_index;
+                        ram_in_enable_a_rst     <= #2 1;
                         
                         main_state          <= #2 ENDRST;
                     end else begin
                         rst_index           <= #2 rst_index + 1;
-                        ram_in_data_a       <= #2 {7'b0, rst_index[8:0]+1, 7'b0, rst_index[8:0]};            
-                        ram_addr_a          <= #2 rst_index;
-                        ram_in_enable_a     <= #2 1;
+                        ram_in_data_a_rst       <= #2 {7'b0, rst_index[8:0]+1, 7'b0, rst_index[8:0]};            
+                        ram_addr_a_rst          <= #2 rst_index;
+                        ram_in_enable_a_rst     <= #2 1;
                         
                         main_state          <= #2 RST;
                     end
                 end
                 
                 ENDRST: begin
-                    ram_in_enable_a     <= #2 0;
+                    ram_in_enable_a_rst     <= #2 0;
                     main_state          <= #2 IDLE;
                 end
                 
@@ -294,11 +300,16 @@ always@(posedge clk) qc_ptr_full <= 0;
 
     
     
-    reg [8:0]   ram_addr_a;
-    reg [8:0]   ram_addr_b;
+    reg [8:0]   ram_addr_a_1;
+    reg [8:0]   ram_addr_a_2;
+    reg [8:0]   ram_addr_a_rst;
+    reg [8:0]   ram_addr_b_1;
+    reg [8:0]   ram_addr_b_2;
 
     reg         ram_in_enable_a;
+    reg         ram_in_enable_a_rst;
     reg [31:0]  ram_in_data_a;
+    reg [31:0]  ram_in_data_a_rst;
     
     reg         ram_in_enable_b;
     reg [31:0]  ram_in_data_b;
@@ -310,19 +321,31 @@ always@(posedge clk) qc_ptr_full <= 0;
     wire [31:0]  ram_out_data_b; 
 
     wire [8:0] ram_addr_a_s;
+    wire [8:0] ram_addr_b_s;
     wire [31:0] ram_in_data_a_s;
     wire ram_in_enable_a_s;
-    assign ram_addr_a_s = (ram_in_enable_a | ram_out_enable_a) ? ram_addr_a : (ram_in_enable_a_hd ? ram_addr_a_hd : ram_addr_a);
-    assign ram_in_data_a_s = (ram_in_enable_a | ram_out_enable_a) ? ram_in_data_a : (ram_in_enable_a_hd ? ram_in_data_a_hd : ram_in_data_a);
-    assign ram_in_enable_a_s = ram_in_enable_a | ram_in_enable_a_hd;
+    assign ram_addr_a_s = (main_state == RST) ? ram_addr_a_rst : 
+                          ram_in_enable_a ? ram_addr_a_1 :
+                          ram_out_enable_a ? ram_addr_a_2 : 
+                          ram_in_enable_a_hd ? ram_addr_a_hd : 
+                          ram_addr_a_1;
+    
+    assign ram_in_data_a_s = (main_state == RST) ? ram_in_data_a_rst :
+                            ram_in_enable_a ? ram_in_data_a : 
+                            ram_in_enable_a_hd ? ram_in_data_a_hd :
+                            ram_in_data_a;
+    
+    assign ram_addr_b_s = ram_out_enable_b ? ram_addr_b_1 : 
+                          ram_addr_b_2;
 
-
+    assign ram_in_enable_a_s = ram_in_enable_a | ram_in_enable_a_hd | ram_in_enable_a_rst;
+    
     dpsram_w32_d512 ptr_list_memory(
       .clka(clk),
       .clkb(clk),
       			
       .addra(ram_addr_a_s),
-      .addrb(ram_addr_b),
+      .addrb(ram_addr_b_s),
       	
       .wea(ram_in_enable_a_s),
       .dina(ram_in_data_a_s),

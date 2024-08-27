@@ -196,40 +196,30 @@ module admission(
                         pkt_len_in    <= #2 pkt_len;            // 传入数据包的长度
                         
                         qc_wr_ptr_wr_en<=#2 1;
+                        in<=#2 1;
+                        last_flg<=#2 0;
                         if (qc_portmap[0]) begin 
-                            qc_wr_ptr_wr_en[0] <= #2 1;         // queue collector (qc) 写指针写使能
                             if (last_flg) begin
                                 in_port   <= #2 0;              // 传入数据包的端口号
-                                in        <= #2 1;              // 指示数据包接收
                                 pd_qc_wr_ptr_wr_en[0] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
-                                last_flg<= #2 0;              // 第一个单元标志
                             end
                         end
                         if (qc_portmap[1]) begin
-                            qc_wr_ptr_wr_en[1] <= #2 1;         // queue collector (qc) 写指针写使能
                             if (last_flg) begin
                                 in_port   <= #2 1;              // 传入数据包的端口号
-                                in        <= #2 1;              // 指示数据包接收
                                 pd_qc_wr_ptr_wr_en[1] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
-                                last_flg<= #2 0;              // 第一个单元标志
                             end
                         end
                         if (qc_portmap[2]) begin
-                            qc_wr_ptr_wr_en[2] <= #2 1;         // queue collector (qc) 写指针写使能
                             if (last_flg) begin 
                                 in_port   <= #2 2;              // 传入数据包的端口号
-                                in        <= #2 1;              // 指示数据包接收
                                 pd_qc_wr_ptr_wr_en[2] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
-                                last_flg<= #2 0;              // 第一个单元标志
                             end
                         end
                         if (qc_portmap[3]) begin
-                            qc_wr_ptr_wr_en[3] <= #2 1;         // queue collector (qc) 写指针写使能
                             if (last_flg) begin 
                                 in_port     <= #2 3;              // 传入数据包的端口号
-                                in          <= #2 1;              // 指示数据包接收
                                 pd_qc_wr_ptr_wr_en[3] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
-                                last_flg<= #2 0;              // 第一个单元标志
                             end
                         end
     

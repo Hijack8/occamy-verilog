@@ -160,7 +160,7 @@ module cell_read_v2(
                 cell_mem_rd<=#2 0;
                 cell_rd_cell_buzy<=#2 1;
                 pd_ptr_ack<=#2 0;
-
+                
                 state<=#2 2;
             end
             2: begin
@@ -168,13 +168,12 @@ module cell_read_v2(
                 cell_rd_pd_buzy<=#2 0;
                 cell_num<=#2 cell_num - 1;
                 #2 cell_addr<= cell_mem_dout[8:0];
-                data_valid<=#2 1;
                 cnt<=#2 0;
                 state<=#2 3;
             end
             3: begin
                 cnt<=#2 1;
-
+                data_valid<=#2 1;
                 if(cell_num == 0) begin 
                     state<=#2 6;
                 end 
