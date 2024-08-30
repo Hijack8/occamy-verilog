@@ -32,6 +32,9 @@ module switch_core_v2(
     output [127:0] data_dout
 );
 
+// output 
+// wire [127:0] data_dout;
+
 // admission TO data_sram
 wire [11:0] sram_addr_a;
 wire [127:0] sram_din_a;
@@ -76,7 +79,7 @@ wire [3:0] pd_ptr_rdy;
 wire [511:0] pd_ptr_dout;
 
 // data_sram TO cell_read
-wire [11:0] sram_addr_b;
+wire [10:0] sram_addr_b;
 wire [127:0] sram_dout_b;
 
 // cell_read TO statistics
@@ -104,6 +107,7 @@ wire [3:0] headdrop_out_port;
 wire [10:0] headdrop_pkt_len_out;
 
 assign data_dout = sram_dout_b;
+
 
 admission ad(
     .clk(clk),
@@ -167,30 +171,53 @@ cell_pointer_memory_control cpm(
     .FQ_din_tail_hd(FQ_din_tail_hd)
 );
     
-pd_memory_control pdm(
-    .clk(clk),              
-    .rstn(rstn),             
+// pd_memory_control pdm(
+//     .clk(clk),              
+//     .rstn(rstn),             
+//     
+//     .pd_FQ_rd(pd_FQ_rd),           
+//     .pd_FQ_empty(pd_FQ_empty),        
+//     .pd_ptr_dout_s(pd_ptr_dout_s),      
+//       
+//     .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en), 
+//     .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),   
+//     .pd_qc_ptr_full(pd_qc_ptr_full),     
+//    
+//     .pd_FQ_wr(pd_FQ_wr),           
+//     .pd_FQ_din(pd_FQ_din),
+//              
+//     .pd_ptr_rdy(pd_ptr_rdy),         
+//     .pd_ptr_ack(pd_ptr_ack),         
+//     .pd_ptr_dout(pd_ptr_dout),
+// 
+//     .pd_FQ_wr_hd(pd_FQ_wr_hd),
+//     .pd_FQ_din_hd(pd_FQ_din_hd),
+//     .pd_ptr_ack_hd(pd_ptr_ack_hd)
+// 
+// );
+
+pd_memory_control_o pdm_o(
+    .clk(clk),
+    .rstn(rstn),
+    .pd_FQ_rd(pd_FQ_rd),
+    .pd_FQ_empty(pd_ptr_dout_s),
     
-    .pd_FQ_rd(pd_FQ_rd),           
-    .pd_FQ_empty(pd_FQ_empty),        
-    .pd_ptr_dout_s(pd_ptr_dout_s),      
-      
-    .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en), 
-    .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),   
-    .pd_qc_ptr_full(pd_qc_ptr_full),     
-   
-    .pd_FQ_wr(pd_FQ_wr),           
+    .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en),
+    .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),
+    .pd_qc_ptr_full(pd_qc_ptr_full),
+
+    .pd_FQ_wr(pd_FQ_wr),
     .pd_FQ_din(pd_FQ_din),
-             
-    .pd_ptr_rdy(pd_ptr_rdy),         
-    .pd_ptr_ack(pd_ptr_ack),         
+    
+    .pd_ptr_rdy(pd_ptr_rdy),
+    .pd_ptr_ack(pd_ptr_ack),
     .pd_ptr_dout(pd_ptr_dout),
 
     .pd_FQ_wr_hd(pd_FQ_wr_hd),
     .pd_FQ_din_hd(pd_FQ_din_hd),
     .pd_ptr_ack_hd(pd_ptr_ack_hd)
-
 );
+
 
 cell_read_v2 cr (
     .clk(clk),
@@ -222,7 +249,7 @@ cell_read_v2 cr (
     .cell_rd_cell_buzy(cell_rd_cell_buzy)
 );
 
-headdrop_v2 hd(
+headdrop_v3 hd(
     .clk(clk),
     .rstn(rstn),
     .FQ_wr(FQ_wr_hd),
@@ -234,7 +261,6 @@ headdrop_v2 hd(
     .pd_ptr_ack(pd_ptr_ack_hd),
     .pd_ptr_dout(pd_ptr_dout),
     
-    .cell_rd_ack(pd_ptr_ack),
     .cell_rd_pd_buzy(cell_rd_pd_buzy),
     .cell_rd_cell_buzy(cell_rd_cell_buzy),
 

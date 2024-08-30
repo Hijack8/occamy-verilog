@@ -35,7 +35,6 @@ module headdrop_v2(
     input [511:0] pd_ptr_dout,
 
     // for conflict 
-    input [3:0] cell_rd_ack,
     input cell_rd_pd_buzy,
     input cell_rd_cell_buzy,
  

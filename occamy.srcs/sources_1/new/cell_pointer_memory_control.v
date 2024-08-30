@@ -324,13 +324,13 @@ always@(posedge clk) qc_ptr_full <= 0;
     wire [8:0] ram_addr_b_s;
     wire [31:0] ram_in_data_a_s;
     wire ram_in_enable_a_s;
-    assign ram_addr_a_s = (main_state == RST) ? ram_addr_a_rst : 
+    assign ram_addr_a_s = (ram_in_enable_a_rst) ? ram_addr_a_rst : 
                           ram_in_enable_a ? ram_addr_a_1 :
                           ram_out_enable_a ? ram_addr_a_2 : 
                           ram_in_enable_a_hd ? ram_addr_a_hd : 
                           ram_addr_a_1;
     
-    assign ram_in_data_a_s = (main_state == RST) ? ram_in_data_a_rst :
+    assign ram_in_data_a_s = (ram_in_enable_a_rst) ? ram_in_data_a_rst :
                             ram_in_enable_a ? ram_in_data_a : 
                             ram_in_enable_a_hd ? ram_in_data_a_hd :
                             ram_in_data_a;

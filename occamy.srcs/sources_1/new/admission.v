@@ -129,7 +129,7 @@ module admission(
                     i_cell_last     <= #2 0;           // 指示数据包中的最后一个单元
                     i_cell_first    <= #2 0;           // 指示数据包中的第一个单元
     
-                    if (!i_cell_ptr_fifo_empty & !qc_ptr_full & !pd_qc_ptr_full & !pd_FQ_empty & !FQ_empty) begin
+                    if (!i_cell_ptr_fifo_empty & !qc_ptr_full & !pd_qc_ptr_full & !FQ_empty) begin
 
                         if(!i_cell_data_fifo_empty) begin
                             i_cell_data_fifo_rd <= #2 1;  // 输入单元数据 FIFO 读使能
@@ -184,7 +184,7 @@ module admission(
                         end
                         
                         qc_wr_ptr_din  <= #2 {i_cell_last, i_cell_first, 4'b0, FQ_dout}; // queue collector (qc) 写指针数据输入
-                        pd_qc_wr_ptr_din <= #2 {47'b0, cell_head, {i_cell_last, i_cell_first, 4'b0, FQ_dout}, pkt_len, cell_number_pd[5:0], 22'b0, pd_FQ_dout}; // PD queue collector (pd_qc) 写指针数据输入
+                        pd_qc_wr_ptr_din <= #2 {47'b0, cell_head, {i_cell_last, i_cell_first, 4'b0, FQ_dout}, pkt_len, cell_number_pd[5:0], 32'b0}; // PD queue collector (pd_qc) 写指针数据输入
 
                             if(first_flg) begin 
                                 cell_head<=#2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};

@@ -72,17 +72,17 @@ module cell_read_v2(
     reg [5:0] cell_num;
     reg [1:0] cnt;
     // for debug 
-    wire [15:0] cell_head_debug, cell_tail_debug;
-    wire [10:0] pkt_len_debug;
-    wire [5:0] cell_num_debug;
-    wire [15:0] next_debug, cur_debug;
-    assign {cell_head_debug, cell_tail_debug, pkt_len_debug, cell_num_debug, next_debug, cur_debug} = pd_head[1][80:0];
+    // wire [15:0] cell_head_debug, cell_tail_debug;
+    // wire [10:0] pkt_len_debug;
+    // wire [5:0] cell_num_debug;
+    // wire [15:0] next_debug, cur_debug;
+    // assign {cell_head_debug, cell_tail_debug, pkt_len_debug, cell_num_debug, next_debug, cur_debug} = pd_head[1][80:0];
 
-    wire [15:0] cell_head_debug2, cell_tail_debug2;
-    wire [10:0] pkt_len_debug2;
-    wire [5:0] cell_num_debug2;
-    wire [15:0] next_debug2, cur_debug2;
-    assign {cell_head_debug2, cell_tail_debug2, pkt_len_debug2, cell_num_debug2, next_debug2, cur_debug2} = pd_head[2][80:0];
+    // wire [15:0] cell_head_debug2, cell_tail_debug2;
+    // wire [10:0] pkt_len_debug2;
+    // wire [5:0] cell_num_debug2;
+    // wire [15:0] next_debug2, cur_debug2;
+    // assign {cell_head_debug2, cell_tail_debug2, pkt_len_debug2, cell_num_debug2, next_debug2, cur_debug2} = pd_head[2][80:0];
 
 
     assign data_sram_addr_b = {cell_addr[8:0], cnt[1:0]};
@@ -160,7 +160,7 @@ module cell_read_v2(
                 cell_mem_rd<=#2 0;
                 cell_rd_cell_buzy<=#2 1;
                 pd_ptr_ack<=#2 0;
-                
+
                 state<=#2 2;
             end
             2: begin

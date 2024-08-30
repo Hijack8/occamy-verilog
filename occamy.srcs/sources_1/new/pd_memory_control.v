@@ -15,7 +15,7 @@ module pd_memory_control #(
     // [Admission]  - read from free queue
     input                   pd_FQ_rd,
     output                  pd_FQ_empty,
-    output      [127:0]       pd_ptr_dout_s,
+    output      [9:0]       pd_ptr_dout_s,
     // [Admission]  - write into qc
     input       [3:0]       pd_qc_wr_ptr_wr_en,
     input       [127:0]     pd_qc_wr_ptr_din,
@@ -38,13 +38,6 @@ module pd_memory_control #(
     // Ready signals for each port
     assign pd_ptr_rdy = {port_can_read[3], port_can_read[2], port_can_read[1], port_can_read[0]};
 
-    // Acknowledge signals for each port
-    wire            pd_ptr_ack0, pd_ptr_ack1, pd_ptr_ack2, pd_ptr_ack3;
-    assign {pd_ptr_ack3, pd_ptr_ack2, pd_ptr_ack1, pd_ptr_ack0} = pd_ptr_ack;
-
-    wire [3:0] pd_ack;
-    assign pd_ack = pd_ptr_ack != 0 ? pd_ptr_ack : (pd_ptr_ack | pd_ptr_ack_hd);
-    
     // Data output for the port
     // reg [127:0]		qc_rd_ptr_dout [3:0];
     // assign pd_ptr_dout = {qc_rd_ptr_dout[3], qc_rd_ptr_dout[2], qc_rd_ptr_dout[1], qc_rd_ptr_dout[0]};
