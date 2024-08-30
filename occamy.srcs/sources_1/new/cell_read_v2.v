@@ -63,9 +63,6 @@ module cell_read_v2(
 
     reg [1:0] RR;
 
-    wire rdy;
-    assign rdy = pd_ptr_rdy[0] | pd_ptr_rdy[1] | pd_ptr_rdy[2] | pd_ptr_rdy[3];
-
 
     reg [5:0] cell_num;
     reg [1:0] cnt;
@@ -85,6 +82,36 @@ module cell_read_v2(
 
     assign data_sram_addr_b = {cell_addr[8:0], cnt[1:0]};
 
+    reg [10:0] counter[3:0];
+    reg [3:0] counter_rst;
+    always@(posedge clk or negedge rstn) begin 
+        if(!rstn) begin 
+            counter[0] <=#2 0;
+            counter[1] <=#2 0;
+            counter[2] <=#2 0;
+            counter[3] <=#2 0;
+        end
+        else begin 
+            if(counter_rst[0]) counter[0] <=#2 100;
+            else if(counter[0] > 0) counter[0] <=#2 counter[0] - 1;
+            if(counter_rst[1]) counter[1] <=#2 100;
+            else if(counter[1] > 0) counter[1] <=#2 counter[1] - 1;
+            if(counter_rst[2]) counter[2] <=#2 100;
+            else if(counter[2] > 0) counter[2] <=#2 counter[2] - 1;
+            if(counter_rst[3]) counter[3] <=#2 100;
+            else if(counter[3] > 0) counter[3] <=#2 counter[3] - 1;
+            
+        end
+    end
+
+    wire [3:0] next_rdy;
+    assign next_rdy = {counter[3] == 0, counter[2] == 0, counter[1] == 0, counter[0] == 0};
+
+    wire [3:0] all_rdy;
+    assign all_rdy = next_rdy & pd_ptr_rdy;
+
+    wire rdy;
+    assign rdy = all_rdy[0] | all_rdy[1] | all_rdy[2] | all_rdy[3];
 
     always@(posedge clk or negedge rstn) begin
         if(!rstn) begin
@@ -121,28 +148,28 @@ module cell_read_v2(
                 if(rdy) begin 
                 case(RR) 
                     0: casex(pd_ptr_rdy)
-                    4'bxxx1: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; end
-                    4'bxx10: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; end
-                    4'bx100: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; end
-                    4'b1000: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; end
+                    4'bxxx1: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; counter_rst[0] <=#2 1; end
+                    4'bxx10: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; counter_rst[1] <=#2 1; end
+                    4'bx100: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; counter_rst[2] <=#2 1; end
+                    4'b1000: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; counter_rst[3] <=#2 1; end
                     endcase
                     1: casex({pd_ptr_rdy[0], pd_ptr_rdy[3:1]}) 
-                    4'bxxx1: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; end
-                    4'bxx10: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; end
-                    4'bx100: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; end
-                    4'b1000: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; end
+                    4'bxxx1: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; counter_rst[1] <=#2 1; end
+                    4'bxx10: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; counter_rst[2] <=#2 1; end
+                    4'bx100: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; counter_rst[3] <=#2 1; end
+                    4'b1000: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; counter_rst[0] <=#2 1; end
                     endcase
                     2: casex({pd_ptr_rdy[1:0], pd_ptr_rdy[3:2]})
-                    4'bxxx1: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; end
-                    4'bxx10: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; end
-                    4'bx100: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; end
-                    4'b1000: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; end
+                    4'bxxx1: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; counter_rst[2] <=#2 1; end
+                    4'bxx10: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; counter_rst[3] <=#2 1; end
+                    4'bx100: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; counter_rst[0] <=#2 1; end
+                    4'b1000: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; counter_rst[1] <=#2 1; end
                     endcase
                     3: casex({pd_ptr_rdy[2:0], pd_ptr_rdy[3]})
-                    4'bxxx1: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; end
-                    4'bxx10: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; end
-                    4'bx100: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; end
-                    4'b1000: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; end
+                    4'bxxx1: begin pd_ptr_ack[3]<=#2 1; FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; cell_mem_addr<=#2 pd_head[3][80:65]; cell_num<=#2 pd_head[3][37:32]; pkt_len_out <=#2 pd_head[3][48:38]; out_port<=#2 3; counter_rst[3] <=#2 1; end
+                    4'bxx10: begin pd_ptr_ack[0]<=#2 1; FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; cell_mem_addr<=#2 pd_head[0][80:65]; cell_num<=#2 pd_head[0][37:32]; pkt_len_out <=#2 pd_head[0][48:38]; out_port<=#2 0; counter_rst[0] <=#2 1; end
+                    4'bx100: begin pd_ptr_ack[1]<=#2 1; FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; cell_mem_addr<=#2 pd_head[1][80:65]; cell_num<=#2 pd_head[1][37:32]; pkt_len_out <=#2 pd_head[1][48:38]; out_port<=#2 1; counter_rst[1] <=#2 1; end
+                    4'b1000: begin pd_ptr_ack[2]<=#2 1; FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; cell_mem_addr<=#2 pd_head[2][80:65]; cell_num<=#2 pd_head[2][37:32]; pkt_len_out <=#2 pd_head[2][48:38]; out_port<=#2 2; counter_rst[2] <=#2 1; end
                     endcase
                 endcase 
                     RR<=#2 RR+1;
@@ -156,6 +183,7 @@ module cell_read_v2(
                 cell_mem_rd<=#2 0;
                 cell_rd_cell_buzy<=#2 1;
                 pd_ptr_ack<=#2 0;
+                counter_rst<=#2 0;
 
                 state<=#2 2;
             end

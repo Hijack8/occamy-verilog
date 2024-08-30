@@ -59,6 +59,7 @@ wire [127:0] pd_qc_wr_ptr_din;
 wire in;
 wire [3:0] in_port;
 wire [10:0] pkt_len_in;
+wire [3:0] bitmap;
 
 // cell_ptr_mem TO cell_read
 wire FQ_wr;
