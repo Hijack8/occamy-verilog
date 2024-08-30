@@ -51,10 +51,6 @@ wire [15:0] qc_wr_ptr_din;
 wire [15:0] qc_wr_preptr_din;
 
 // admission TO pd_mem
-wire pd_FQ_empty;
-wire pd_FQ_rd;
-wire [9:0] pd_ptr_dout_s;
-
 wire pd_qc_ptr_full;
 wire [3:0] pd_qc_wr_ptr_wr_en;
 wire [127:0] pd_qc_wr_ptr_din;
@@ -72,8 +68,6 @@ wire [15:0] cell_mem_addr;
 wire [31:0] cell_mem_dout;
 
 // pd_mem TO cell_read
-wire pd_FQ_wr;
-wire [15:0] pd_FQ_din;
 wire [3:0] pd_ptr_ack;
 wire [3:0] pd_ptr_rdy;
 wire [511:0] pd_ptr_dout;
@@ -92,11 +86,6 @@ wire FQ_wr_hd;
 wire [15:0] FQ_din_head_hd;
 wire [15:0] FQ_din_tail_hd;
 
-// headdrop TO pd_mem
-wire pd_FQ_wr_hd;
-wire [15:0] pd_FQ_din_hd;
-wire [3:0] pd_ptr_ack_hd;
-
 // cell_read TO headdrop
 wire cell_rd_pd_buzy;
 wire cell_rd_cell_buzy;
@@ -106,6 +95,8 @@ wire headdrop_out;
 wire [3:0] headdrop_out_port;
 wire [10:0] headdrop_pkt_len_out;
 
+// headdrop TO pd_mem
+wire [3:0] pd_ptr_ack_hd;
 assign data_dout = sram_dout_b;
 
 
@@ -126,10 +117,6 @@ admission ad(
     .FQ_rd(FQ_rd),
     .FQ_empty(FQ_empty),
     .ptr_dout_s(ptr_dout_s),
-    
-    .pd_FQ_rd(pd_FQ_rd),
-    .pd_FQ_empty(pd_FQ_empty),
-    .pd_ptr_dout_s(pd_ptr_dout_s),
     
     .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en),
     .qc_wr_ptr_din(qc_wr_ptr_din),
@@ -199,22 +186,15 @@ cell_pointer_memory_control cpm(
 pd_memory_control_o pdm_o(
     .clk(clk),
     .rstn(rstn),
-    .pd_FQ_rd(pd_FQ_rd),
-    .pd_FQ_empty(pd_ptr_dout_s),
     
     .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en),
     .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),
     .pd_qc_ptr_full(pd_qc_ptr_full),
 
-    .pd_FQ_wr(pd_FQ_wr),
-    .pd_FQ_din(pd_FQ_din),
-    
     .pd_ptr_rdy(pd_ptr_rdy),
     .pd_ptr_ack(pd_ptr_ack),
     .pd_ptr_dout(pd_ptr_dout),
 
-    .pd_FQ_wr_hd(pd_FQ_wr_hd),
-    .pd_FQ_din_hd(pd_FQ_din_hd),
     .pd_ptr_ack_hd(pd_ptr_ack_hd)
 );
 
@@ -231,8 +211,6 @@ cell_read_v2 cr (
     .cell_mem_addr(cell_mem_addr),
 
 
-    .pd_FQ_wr(pd_FQ_wr),
-    .pd_FQ_din(pd_FQ_din),
     .pd_ptr_rdy(pd_ptr_rdy),
     .pd_ptr_ack(pd_ptr_ack),
     .pd_ptr_dout(pd_ptr_dout),
@@ -255,8 +233,6 @@ headdrop_v3 hd(
     .FQ_wr(FQ_wr_hd),
     .FQ_din_head(FQ_din_head_hd),
     .FQ_din_tail(FQ_din_tail_hd),
-    .pd_FQ_wr(pd_FQ_wr_hd),
-    .pd_FQ_din(pd_FQ_din_hd),
     .pd_ptr_rdy(pd_ptr_rdy),
     .pd_ptr_ack(pd_ptr_ack_hd),
     .pd_ptr_dout(pd_ptr_dout),

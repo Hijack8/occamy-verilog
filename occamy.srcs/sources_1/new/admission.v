@@ -25,10 +25,6 @@ module admission(
     input               FQ_empty,               // free queue (FQ) 的空状态信号
     input      [9:0]    ptr_dout_s,             // free queue (FQ) 的输出指针
         
-    output reg          pd_FQ_rd,               // free PD queue (FPDQ) 的读使能
-    input               pd_FQ_empty,            // free PD queue (FPDQ) 的空状态信号
-    input      [9:0]    pd_ptr_dout_s,          // free PD queue (FPDQ) 的输出指针
-    
     // 与 qc 交换
     output reg     qc_wr_ptr_wr_en,        // queue collector (qc) 写指针写使能
     output reg [15:0]   qc_wr_ptr_din,          // queue collector (qc) 写指针数据输入
@@ -69,8 +65,6 @@ module admission(
 
     reg  [9:0]     FQ_dout;                     // free queue (FQ) 的数据输出
 
-    reg  [9:0]     pd_FQ_dout;                  // free PD queue (FPDQ) 的数据输出
-    
     reg  [9:0]     pre_cell_ptr;
 
     reg            first_flg;                   // 第一个单元标志
@@ -101,8 +95,6 @@ module admission(
             i_cell_last         <= #2 0;          // 指示数据包中的最后一个单元
             i_cell_first        <= #2 0;          // 指示数据包中的第一个单元
             first_flg           <= #2 0;          // 第一个单元标志
-            pd_FQ_rd            <= #2 0;          // free PD queue (FPDQ) 的读使能
-            pd_FQ_dout          <= #2 0;          // free PD queue (FPDQ) 的数据输出
             pd_qc_wr_ptr_wr_en  <= #2 0;          // PD queue collector (pd_qc) 写指针写使能
             pd_qc_wr_ptr_din    <= #2 0;          // PD queue collector (pd_qc) 写指针数据输入
             in                  <= #2 0;          // 指示数据包接收
@@ -117,7 +109,6 @@ module admission(
             
         end else begin
             FQ_rd               <= #2 0;           // free queue (FQ) 的读使能
-            pd_FQ_rd            <= #2 0;           // free queue (FQ) 的读使能
             qc_wr_ptr_wr_en     <= #2 0;           // queue collector (qc) 写指针写使能
             pd_qc_wr_ptr_wr_en  <= #2 0;           // PD queue collector (pd_qc) 写指针写使能
             i_cell_ptr_fifo_rd  <= #2 0;           // 输入单元指针 FIFO 读使能
@@ -150,8 +141,6 @@ module admission(
                         end else begin
                             FQ_rd        <= #2 1;    // free queue (FQ) 的读使能
                             FQ_dout      <= #2 ptr_dout_s; // free queue (FQ) 的输出指针
-                            pd_FQ_rd     <= #2 1;    // free PD queue (FPDQ) 的读使能
-                            pd_FQ_dout   <= #2 pd_ptr_dout_s; // free PD queue (FPDQ) 的输出指针
     
                             i_cell_first <= #2 1;    // 指示数据包中的第一个单元
                             first_flg    <= #2 1;    // 第一个单元标志
@@ -194,32 +183,34 @@ module admission(
                         
                         wr_state      <= #2 2;
                         pkt_len_in    <= #2 pkt_len;            // 传入数据包的长度
-                        
                         qc_wr_ptr_wr_en<=#2 1;
-                        in<=#2 1;
                         last_flg<=#2 0;
                         if (qc_portmap[0]) begin 
                             if (last_flg) begin
                                 in_port   <= #2 0;              // 传入数据包的端口号
                                 pd_qc_wr_ptr_wr_en[0] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
+                                in<=#2 1;
                             end
                         end
                         if (qc_portmap[1]) begin
                             if (last_flg) begin
                                 in_port   <= #2 1;              // 传入数据包的端口号
                                 pd_qc_wr_ptr_wr_en[1] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
+                                in<=#2 1;
                             end
                         end
                         if (qc_portmap[2]) begin
                             if (last_flg) begin 
                                 in_port   <= #2 2;              // 传入数据包的端口号
                                 pd_qc_wr_ptr_wr_en[2] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
+                                in<=#2 1;
                             end
                         end
                         if (qc_portmap[3]) begin
                             if (last_flg) begin 
                                 in_port     <= #2 3;              // 传入数据包的端口号
                                 pd_qc_wr_ptr_wr_en[3] <= #2 1;  // PD queue collector (pd_qc) 写指针写使能
+                                in<=#2 1;
                             end
                         end
     

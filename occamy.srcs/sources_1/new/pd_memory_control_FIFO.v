@@ -4,26 +4,17 @@ module pd_memory_control_o (
     input                   clk,              // Clock input
     input                   rstn,             // Asynchronous reset, active low
 
-    // [Admission]  - read from free queue
-    input                   pd_FQ_rd,
-    output                  pd_FQ_empty,
-    output      [9:0]       pd_ptr_dout_s,
-
     // [Admission]  - write into qc
     input       [3:0]       pd_qc_wr_ptr_wr_en,
     input       [127:0]     pd_qc_wr_ptr_din,
     output [3:0]       pd_qc_ptr_full,
 
-    // [Cell read]  - write into free queue
-    input                   pd_FQ_wr,
-    input       [15:0]      pd_FQ_din,
     // [Cell read]  - read from qc
     output      [3:0]       pd_ptr_rdy,
     input       [3:0]       pd_ptr_ack,
     output      [511:0]     pd_ptr_dout,  
 
-    input pd_FQ_wr_hd,
-    input [15:0] pd_FQ_din_hd,
+    // [Headdrop] - read from qc
     input [3:0] pd_ptr_ack_hd
 );
 
