@@ -99,6 +99,7 @@ always @(posedge clk or negedge rstn) begin
             end
         end 
         1: begin 
+            pd_ptr_ack<=#2 0;
             if(cell_rd_pd_buzy) begin 
                 state<=#2 0;
             end
