@@ -38,7 +38,8 @@ module statistics(
     );
     
     parameter alpha_shift = 0;
-    parameter buffer_size = 32768;// 32KB
+    // parameter buffer_size = 32768;// 32KB
+    parameter buffer_size = 6400;// 32KB
     
     wire [2:0] sig;
     reg [31:0] qlen[3:0];
@@ -84,9 +85,18 @@ module statistics(
             end
             3'b111: begin
                 if(in_port == out_port && in_port == headdrop_out_port)  qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out - headdrop_pkt_len_out;
-                else if(in_port == out_port) qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out;
-                else if(headdrop_out_port == in_port) qlen[in_port]<=#2 qlen[in_port] + pkt_len_in - headdrop_pkt_len_out;
-                else if(headdrop_out_port == out_port) qlen[out_port]<=#2 qlen[out_port] - pkt_len_out - headdrop_pkt_len_out;
+                else if(in_port == out_port) begin 
+                    qlen[in_port] <= #2 qlen[in_port] + pkt_len_in - pkt_len_out;
+                    qlen[headdrop_out_port] <=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
+                end
+                else if(headdrop_out_port == in_port) begin 
+                    qlen[in_port]<=#2 qlen[in_port] + pkt_len_in - headdrop_pkt_len_out;
+                    qlen[out_port]<=#2 qlen[out_port] - pkt_len_out;
+                end
+                else if(headdrop_out_port == out_port) begin 
+                    qlen[out_port]<=#2 qlen[out_port] - pkt_len_out - headdrop_pkt_len_out;
+                    qlen[in_port] <=#2 qlen[in_port] + pkt_len_in;
+                end
                 else begin 
                     qlen[headdrop_out_port]<=#2 qlen[headdrop_out_port] - headdrop_pkt_len_out;
                     qlen[out_port] <=#2 qlen[out_port] - pkt_len_out;
