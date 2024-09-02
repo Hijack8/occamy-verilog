@@ -109,7 +109,7 @@ always@(posedge clk) qc_ptr_full <= 0;
                 0:  begin
                     if(main_state != RST && FQ_wr) begin
                         ram_addr_a_1          <= #2 FQ_tail;
-                        ram_in_data_a       <= #2 {FQ_din_head,7'b0,FQ_tail};
+                        ram_in_data_a       <= #2 {FQ_din_head,6'b0,FQ_tail};
                         ram_in_enable_a     <= #2 1;
                                      
                         FQ_tail             <= #2 FQ_din_tail[9:0];
@@ -280,9 +280,9 @@ always@(posedge clk) qc_ptr_full <= 0;
         else begin 
             case(fq_hd_wr_state)
             0:  begin
-                    if(main_state != RST && FQ_wr_hd) begin
+                    if(main_state != RST && !FQ_wr && FQ_wr_hd) begin
                         ram_addr_a_hd          <= #2 FQ_tail;
-                        ram_in_data_a_hd       <= #2 {FQ_din_head_hd,7'b0,FQ_tail};
+                        ram_in_data_a_hd       <= #2 {FQ_din_head_hd,6'b0,FQ_tail};
                         ram_in_enable_a_hd     <= #2 1;
                                      
                         FQ_tail             <= #2 FQ_din_tail_hd[9:0];
