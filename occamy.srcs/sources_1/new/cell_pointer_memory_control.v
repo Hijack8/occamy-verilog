@@ -37,11 +37,11 @@ module cell_pointer_memory_control #(
     input               FQ_rd,            // Read signal for the queue
     output              FQ_empty,         // Queue empty status signal
     output      [9:0]   ptr_dout_s,       // Pointer data output (short)
-    // Admission control - write into qc
-    input          qc_wr_ptr_wr_en,  // Write enable for each queue channel
-    input       [15:0]  qc_wr_ptr_din,    // Data input for the write pointer
-    input       [15:0]  qc_wr_preptr_din, // queue collector (qc) 写指针(pre)数据输入
-    output reg qc_ptr_full,
+//    // Admission control - write into qc
+//    input          qc_wr_ptr_wr_en,  // Write enable for each queue channel
+//    input       [15:0]  qc_wr_ptr_din,    // Data input for the write pointer
+//    input       [15:0]  qc_wr_preptr_din, // queue collector (qc) 写指针(pre)数据输入
+//    output reg qc_ptr_full,
     
     // Cell read operations - write into queue
     input               FQ_wr,            // Write signal for the queue
@@ -57,9 +57,6 @@ module cell_pointer_memory_control #(
     input [15:0] FQ_din_tail_hd
 );
    
-always@(posedge clk) qc_ptr_full <= 0;
-
-
     reg [9:0]   FQ_head;
     reg [9:0]   FQ_tail;
     assign FQ_empty = (FQ_head == FQ_tail)?1:0;
@@ -132,35 +129,35 @@ always@(posedge clk) qc_ptr_full <= 0;
     //      inpu        [15:0]   qc_wr_preptr_din
     //      output reg  [ 3:0]  qc_ptr_full         Queue full status output           
                                                                                 
-    reg [2:0]   qc_wr_state;
-    always@(posedge clk or negedge rstn) begin
-        if(!rstn) begin
-            qc_wr_state         <= #2 0;
-            ram_in_enable_b<=#2 0;
-            ram_addr_b_2<=#2 0;
-            ram_in_data_b<=#2 0;
-        end else begin // 先不考虑多播
-            case(qc_wr_state)
-                0:  begin
-                    if(main_state != RST && qc_wr_ptr_wr_en) begin    
-                        ram_addr_b_2          <= #2 qc_wr_preptr_din[8:0];
-                        ram_in_data_b       <= #2 {qc_wr_ptr_din, qc_wr_preptr_din};
-                        if(!qc_wr_ptr_din[14])
-                            ram_in_enable_b         <= #2 1;
-                        else
-                            ram_in_enable_b         <= #2 0;
-                            
-                        qc_wr_state     <= #2 1;
-                            
-                    end
-                end
-                1:  begin
-                    ram_in_enable_b     <= #2 0;
-                    qc_wr_state         <= #2 0;
-                end
-            endcase
-        end
-    end  
+    // reg [2:0]   qc_wr_state;
+    // always@(posedge clk or negedge rstn) begin
+    //     if(!rstn) begin
+    //         qc_wr_state         <= #2 0;
+    //         ram_in_enable_b<=#2 0;
+    //         ram_addr_b_2<=#2 0;
+    //         ram_in_data_b<=#2 0;
+    //     end else begin // 先不考虑多播
+    //         case(qc_wr_state)
+    //             0:  begin
+    //                 if(main_state != RST && qc_wr_ptr_wr_en) begin    
+    //                     ram_addr_b_2          <= #2 qc_wr_preptr_din[8:0];
+    //                     ram_in_data_b       <= #2 {qc_wr_ptr_din, qc_wr_preptr_din};
+    //                     if(!qc_wr_ptr_din[14])
+    //                         ram_in_enable_b         <= #2 1;
+    //                     else
+    //                         ram_in_enable_b         <= #2 0;
+    //                         
+    //                     qc_wr_state     <= #2 1;
+    //                         
+    //                 end
+    //             end
+    //             1:  begin
+    //                 ram_in_enable_b     <= #2 0;
+    //                 qc_wr_state         <= #2 0;
+    //             end
+    //         endcase
+    //     end
+    // end  
     
     
     // read pointer from one port's linked list's head;
@@ -201,7 +198,7 @@ always@(posedge clk) qc_ptr_full <= 0;
     reg     [8:0]   rst_index;
     reg     [2:0]   main_state;
     wire    [5:0]   main_sig;
-    assign main_sig = {FQ_rd, FQ_wr, qc_wr_ptr_wr_en, 3'b0};
+    assign main_sig = {FQ_rd, FQ_wr, 4'b0};
     always@(posedge clk or negedge rstn) begin
         if(!rstn) begin
             main_state                      <= #2 RST;

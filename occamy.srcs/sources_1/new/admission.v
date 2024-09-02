@@ -15,27 +15,21 @@ module admission(
     input      [15:0]   i_cell_ptr_fifo_din,    // 输入单元指针 FIFO 的输入数据
     input               i_cell_ptr_fifo_wr,     // 输入单元指针 FIFO 的写使能
 
-    // 与 sram 交换             
+    // TO sram 
     output     [11:0]   sram_addr,              // SRAM 地址
     output     [127:0]  sram_din,               // SRAM 数据输入
     output              sram_wr,                // SRAM 写使能
     
-    // 与 free queue 交换
+    // TO free queue 
     output reg          FQ_rd,                  // free queue (FQ) 的读使能
     input               FQ_empty,               // free queue (FQ) 的空状态信号
     input      [9:0]    ptr_dout_s,             // free queue (FQ) 的输出指针
         
-    // 与 qc 交换
-    output reg     qc_wr_ptr_wr_en,        // queue collector (qc) 写指针写使能
-    output reg [15:0]   qc_wr_ptr_din,          // queue collector (qc) 写指针数据输入
-    output reg [15:0]   qc_wr_preptr_din,       // queue collector (qc) 写指针(pre)数据输入
-    input               qc_ptr_full,            // queue collector (qc) 指针满状态信号
-    
     output reg [3:0]    pd_qc_wr_ptr_wr_en,     // PD queue collector (pd_qc) 写指针写使能
     output reg [127:0]  pd_qc_wr_ptr_din,       // PD queue collector (pd_qc) 写指针数据输入
     input               pd_qc_ptr_full,         // PD queue collector (pd_qc) 指针满状态信号
         
-    // 与 statistic 交换
+    // TO statistic 
     output reg          in,                     // 指示数据包接收
     output reg [3:0]    in_port,                // 传入数据包的端口号
     output reg [10:0]   pkt_len_in,             // 传入数据包的长度
@@ -65,7 +59,6 @@ module admission(
 
     reg  [9:0]     FQ_dout;                     // free queue (FQ) 的数据输出
 
-    reg  [9:0]     pre_cell_ptr;
 
     reg            first_flg;                   // 第一个单元标志
     reg last_flg;
@@ -86,9 +79,6 @@ module admission(
             sram_cnt_a          <= #2 0;           // SRAM 计数器 A
             i_cell_data_fifo_rd <= #2 0;         // 输入单元数据 FIFO 读使能
             i_cell_ptr_fifo_rd  <= #2 0;          // 输入单元指针 FIFO 读使能
-            qc_wr_ptr_wr_en     <= #2 0;          // queue collector (qc) 写指针写使能
-            qc_wr_ptr_din       <= #2 0;          // queue collector (qc) 写指针数据输入
-            qc_wr_preptr_din    <= #2 0;
             qc_portmap          <= #2 0;          // 队列控制器端口映射
             cell_number         <= #2 0;          // 数据包中单元的数量
             cell_number_pd<=#2 0;
@@ -101,7 +91,6 @@ module admission(
             in_port             <= #2 0;          // 传入数据包的端口号
             pkt_len_in          <= #2 0;          // 传入数据包的长度
             drop                <= #2 0;          // 数据包丢弃标志
-            pre_cell_ptr        <= #2 0;
 
             cell_head<=#2 0;
             cell_tail<=#2 0;
@@ -109,7 +98,6 @@ module admission(
             
         end else begin
             FQ_rd               <= #2 0;           // free queue (FQ) 的读使能
-            qc_wr_ptr_wr_en     <= #2 0;           // queue collector (qc) 写指针写使能
             pd_qc_wr_ptr_wr_en  <= #2 0;           // PD queue collector (pd_qc) 写指针写使能
             i_cell_ptr_fifo_rd  <= #2 0;           // 输入单元指针 FIFO 读使能
             i_cell_data_fifo_rd <= #2 0;
@@ -120,7 +108,7 @@ module admission(
                     i_cell_last     <= #2 0;           // 指示数据包中的最后一个单元
                     i_cell_first    <= #2 0;           // 指示数据包中的第一个单元
     
-                    if (!i_cell_ptr_fifo_empty & !qc_ptr_full & !pd_qc_ptr_full & !FQ_empty) begin
+                    if (!i_cell_ptr_fifo_empty & !pd_qc_ptr_full & !FQ_empty) begin
 
                         if(!i_cell_data_fifo_empty) begin
                             i_cell_data_fifo_rd <= #2 1;  // 输入单元数据 FIFO 读使能
@@ -163,27 +151,14 @@ module admission(
                         cell_number    <= #2 cell_number - 1; // 数据包中单元的数量
                         sram_cnt_a     <= #2 1;               // SRAM 计数器 A
                         
-                        if(!i_cell_first) begin
-                            pre_cell_ptr        <= #2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};
-                            qc_wr_preptr_din    <= #2 pre_cell_ptr;
-
-                        end else begin
-                            pre_cell_ptr        <= #2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};
-                            qc_wr_preptr_din    <= #2 {16{1'b1}};    
-                        end
-                        
-                        qc_wr_ptr_din  <= #2 {i_cell_last, i_cell_first, 4'b0, FQ_dout}; // queue collector (qc) 写指针数据输入
                         pd_qc_wr_ptr_din <= #2 {47'b0, cell_head, {i_cell_last, i_cell_first, 4'b0, FQ_dout}, pkt_len, cell_number_pd[5:0], 32'b0}; // PD queue collector (pd_qc) 写指针数据输入
 
-                            if(first_flg) begin 
-                                cell_head<=#2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};
-                                first_flg <=#2 0;
-                            end
-                        // if(i_cell_last) cell_tail<=#2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};
+                        if(first_flg) begin 
+                            cell_head<=#2 {i_cell_last, i_cell_first, 4'b0, FQ_dout};
+                            first_flg <=#2 0;
+                        end
                         
-                        wr_state      <= #2 2;
                         pkt_len_in    <= #2 pkt_len;            // 传入数据包的长度
-                        qc_wr_ptr_wr_en<=#2 1;
                         last_flg<=#2 0;
                         if (qc_portmap[0]) begin 
                             if (last_flg) begin
@@ -213,10 +188,9 @@ module admission(
                                 in<=#2 1;
                             end
                         end
-    
-                    end else begin
-                        wr_state            <= #2 1;
-                    end
+
+                        wr_state      <= #2 2;
+                    end 
                 end
                 2: begin
                     if(!i_cell_data_fifo_empty) begin
@@ -224,9 +198,7 @@ module admission(
                         in                  <= #2 0;                   // 指示数据包接收
                         sram_cnt_a          <= #2 2;                   // SRAM 计数器 A
                         wr_state            <= #2 3;
-                    end else begin
-                        wr_state            <= #2 2;
-                    end
+                    end 
                 end
                 3: begin
                     if(!i_cell_data_fifo_empty) begin
@@ -235,9 +207,7 @@ module admission(
                         sram_cnt_a          <= #2 3;                   // SRAM 计数器 A
                         wr_state            <= #2 4;
                         
-                    end else begin
-                        wr_state            <= #2 3;
-                    end
+                    end 
                 end
                 4: begin
                     if(!i_cell_data_fifo_empty) begin
@@ -264,9 +234,7 @@ module admission(
                             wr_state     <= #2 0;
                         end
                         
-                    end else begin
-                        wr_state     <= #2 4;
-                    end
+                    end 
                 end
                 5: begin
                     sram_cnt_a   <= #2 sram_cnt_a + 1;      // SRAM 计数器 A
@@ -284,9 +252,7 @@ module admission(
                     if(!i_cell_data_fifo_empty) begin
                         i_cell_data_fifo_rd <= #2 1;  // 输入单元数据 FIFO 读使能
                         wr_state     <= #2 1;
-                    end else begin            
-                        wr_state     <= #2 6;
-                    end
+                    end 
                 end
                 
                 default:

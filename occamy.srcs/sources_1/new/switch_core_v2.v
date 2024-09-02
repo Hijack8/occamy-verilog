@@ -45,11 +45,6 @@ wire FQ_rd;
 wire FQ_empty;
 wire [9:0] ptr_dout_s;
 
-wire qc_ptr_full;
-wire qc_wr_ptr_wr_en;
-wire [15:0] qc_wr_ptr_din;
-wire [15:0] qc_wr_preptr_din;
-
 // admission TO pd_mem
 wire pd_qc_ptr_full;
 wire [3:0] pd_qc_wr_ptr_wr_en;
@@ -119,11 +114,6 @@ admission ad(
     .FQ_empty(FQ_empty),
     .ptr_dout_s(ptr_dout_s),
     
-    .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en),
-    .qc_wr_ptr_din(qc_wr_ptr_din),
-    .qc_ptr_full(qc_ptr_full),
-    .qc_wr_preptr_din(qc_wr_preptr_din),
-    
     .pd_qc_wr_ptr_wr_en(pd_qc_wr_ptr_wr_en),
     .pd_qc_wr_ptr_din(pd_qc_wr_ptr_din),
     .pd_qc_ptr_full(pd_qc_ptr_full),
@@ -141,11 +131,6 @@ cell_pointer_memory_control cpm(
     .FQ_rd(FQ_rd), 
     .FQ_empty(FQ_empty), 
     .ptr_dout_s(ptr_dout_s),
-     
-    .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en), 
-    .qc_wr_ptr_din(qc_wr_ptr_din), 
-    .qc_wr_preptr_din(qc_wr_preptr_din),
-    .qc_ptr_full(qc_ptr_full),
     
     .FQ_wr(FQ_wr), 
     .FQ_din_head(FQ_din_head), 
