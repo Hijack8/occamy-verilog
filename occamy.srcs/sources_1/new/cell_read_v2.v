@@ -90,6 +90,7 @@ module cell_read_v2(
             counter[1] <=#2 0;
             counter[2] <=#2 0;
             counter[3] <=#2 0;
+            counter_rst <=#2 0;
         end
         else begin 
             if(counter_rst[0]) counter[0] <=#2 100;
@@ -141,7 +142,6 @@ module cell_read_v2(
             case(state)
             0: begin
                 FQ_wr<=#2 0;
-                cell_rd_cell_buzy<=#2 0;
                 data_valid<=#2 0;
                 out<=#2 0;
                 // TODO
@@ -177,11 +177,11 @@ module cell_read_v2(
                     cell_rd_pd_buzy<=#2 1;
                     state<=#2 1;
                 end
-                else cell_rd_pd_buzy<=#2 0;
             end 
             1: begin 
                 cell_mem_rd<=#2 0;
                 cell_rd_cell_buzy<=#2 1;
+                cell_rd_pd_buzy<=#2 0;
                 pd_ptr_ack<=#2 0;
                 counter_rst<=#2 0;
 
@@ -189,7 +189,6 @@ module cell_read_v2(
             end
             2: begin
                 cell_rd_cell_buzy<=#2 0;
-                cell_rd_pd_buzy<=#2 0;
                 cell_num<=#2 cell_num - 1;
                 #2 cell_addr<= cell_mem_dout[8:0];
                 cnt<=#2 0;
@@ -200,8 +199,8 @@ module cell_read_v2(
                 data_valid<=#2 1;
                 if(cell_num == 0) begin 
                     state<=#2 6;
-                end 
-                else begin 
+                end
+                else begin
                     cell_mem_addr<=#2 cell_mem_dout[24:16];
                     cell_mem_rd<=#2 1;
                     cell_rd_cell_buzy<=#2 1;
@@ -227,19 +226,13 @@ module cell_read_v2(
                 cnt<=#2 3;
                 // free 
                 FQ_wr<=#2 1;
-                cell_rd_pd_buzy<=#2 1;
                 cell_rd_cell_buzy<=#2 1;
                 out<=#2 1;
-                
                 state<=#2 0;
             end
-
-
             endcase
         end
     end
-
-
 
 endmodule
 
