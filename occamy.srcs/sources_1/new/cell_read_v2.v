@@ -142,6 +142,7 @@ module cell_read_v2(
             case(state)
             0: begin
                 FQ_wr<=#2 0;
+                cell_rd_cell_buzy<=#2 0;
                 data_valid<=#2 0;
                 out<=#2 0;
                 // TODO
