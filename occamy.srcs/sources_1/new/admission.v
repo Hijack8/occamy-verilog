@@ -268,7 +268,7 @@ module admission(
     assign sram_addr = {FQ_dout[9:0], sram_cnt_a[1:0]};       // SRAM 地址
     assign sram_din  = i_cell_data_fifo_dout[127:0];          // SRAM 数据输入
     // 计算数据包长度：cell_number * 64 Byte
-    assign pkt_len   = {cell_number, 6'd0};                  // 数据包长度
+    assign pkt_len   = {cell_number_pd, 6'd0};                  // 数据包长度
     // back-push 信号，
     // 当 data FIFO 深度超过 161 [ (256 - 160) * 128 / 8 = 1,536 Byte ] 
     // 或指针 FIFO 满时，拉高back-push信号
