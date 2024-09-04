@@ -34,7 +34,8 @@ module statistics(
     input [3:0] headdrop_out_port,
     input [10:0] headdrop_pkt_len_out,
 
-    output[3:0] bitmap
+    output [3:0] bitmap,
+    output [3:0] bitmap_dt
     );
     
     parameter alpha_shift = 0;
@@ -110,4 +111,5 @@ module statistics(
     wire [31:0] T;
     assign T = ((buffer_size) - qlen[0] - qlen[1] - qlen[2] - qlen[3]) >> alpha_shift;
     assign bitmap = {qlen[3] < T, qlen[2] < T, qlen[1] < T, qlen[0] < T};
+    assign bitmap_dt = {qlen[3] + 256 < T, qlen[2] + 256 < T, qlen[1] + 256 < T, qlen[0] + 256 < T};
 endmodule

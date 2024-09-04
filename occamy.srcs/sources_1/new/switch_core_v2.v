@@ -54,7 +54,7 @@ wire [127:0] pd_qc_wr_ptr_din;
 wire in;
 wire [3:0] in_port;
 wire [10:0] pkt_len_in;
-wire [3:0] bitmap;
+wire [3:0] bitmap_dt;
 
 // cell_ptr_mem TO cell_read
 wire FQ_wr;
@@ -90,6 +90,7 @@ wire cell_rd_cell_buzy;
 wire headdrop_out;
 wire [3:0] headdrop_out_port;
 wire [10:0] headdrop_pkt_len_out;
+wire [3:0] bitmap;
 
 // headdrop TO pd_mem
 wire [3:0] pd_ptr_ack_hd;
@@ -121,7 +122,7 @@ admission ad(
     .in(in),
     .in_port(in_port),
     .pkt_len_in(pkt_len_in),
-    .bitmap(bitmap)
+    .bitmap(bitmap_dt)
 );
 
 cell_pointer_memory_control cpm(
@@ -263,7 +264,8 @@ statistics sts(
     .headdrop_out(headdrop_out),
     .headdrop_out_port(headdrop_out_port),
     .headdrop_pkt_len_out(headdrop_pkt_len_out),
-    .bitmap(bitmap) 
+    .bitmap(bitmap),
+    .bitmap_dt(bitmap_dt)
 );
 
 endmodule
