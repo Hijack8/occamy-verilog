@@ -26,10 +26,6 @@ reg clk, rstn;
 reg FQ_rd;
 wire FQ_empty;
 wire [9:0] ptr_dout_s;
-reg qc_wr_ptr_wr_en;
-reg [15:0] qc_wr_ptr_din;
-reg [15:0] qc_wr_preptr_din;
-wire qc_ptr_full;
 
 reg FQ_wr;
 reg [15:0] FQ_din_head;
@@ -50,11 +46,6 @@ cell_pointer_memory_control cpm(
     .FQ_empty(FQ_empty), 
     .ptr_dout_s(ptr_dout_s),
      
-    .qc_wr_ptr_wr_en(qc_wr_ptr_wr_en), 
-    .qc_wr_ptr_din(qc_wr_ptr_din), 
-    .qc_wr_preptr_din(qc_wr_preptr_din),
-    .qc_ptr_full(qc_ptr_full),
-    
     .FQ_wr(FQ_wr), 
     .FQ_din_head(FQ_din_head), 
     .FQ_din_tail(FQ_din_tail),
@@ -76,7 +67,7 @@ end
 integer i;
 initial begin  
     rstn = 1'b1;
-    FQ_rd = 0; qc_wr_ptr_wr_en = 0; qc_wr_ptr_din = 0; qc_wr_preptr_din = 0; 
+    FQ_rd = 0; 
     FQ_wr = 0; FQ_din_head = 0; FQ_din_tail = 0; cell_mem_rd = 0; cell_mem_addr = 0;
     FQ_wr_hd = 0; FQ_din_head_hd = 0; FQ_din_tail_hd = 0;
     #18 rstn = 1'b0; 

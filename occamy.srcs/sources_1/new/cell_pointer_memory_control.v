@@ -273,6 +273,11 @@ module cell_pointer_memory_control #(
             ram_in_enable_a_hd<=#2 0;
             ram_addr_a_hd<=#2 0;
             ram_in_data_a_hd<=#2 0;
+
+            ram_addr_b_2 <=#2 0;
+            ram_in_enable_b<=#2 0;
+            ram_in_data_b<=#2 0;
+
         end
         else begin 
             case(fq_hd_wr_state)
