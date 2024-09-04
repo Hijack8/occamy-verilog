@@ -67,7 +67,7 @@ always @(posedge clk or negedge rstn) begin
     else begin 
         case(state)
         0: begin 
-            if(rdy && (~cell_rd_pd_buzy)) begin 
+            if(rdy) begin 
                 case(RR)
                 0: casex(headdrop_rdy) 
                 4'bxxx1: begin FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; pd_ptr_ack[0]<=#2 1; headdrop_out_port<=#2 0; headdrop_pkt_len_out<=#2 pd_head[0][48:38]; end
@@ -111,17 +111,45 @@ always @(posedge clk or negedge rstn) begin
         end
         2: begin 
             headdrop_out<=#2 0;
-            if(cell_rd_cell_buzy) begin 
-                FQ_wr<=#2 1;
-            end
-            else begin 
+            if(!cell_rd_cell_buzy) begin 
                 FQ_wr<=#2 0;
-                state<=#2 0;
+                if(rdy) begin 
+                    case(RR)
+                    0: casex(headdrop_rdy) 
+                    4'bxxx1: begin FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; pd_ptr_ack[0]<=#2 1; headdrop_out_port<=#2 0; headdrop_pkt_len_out<=#2 pd_head[0][48:38]; end
+                    4'bxx10: begin FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; pd_ptr_ack[1]<=#2 1; headdrop_out_port<=#2 1; headdrop_pkt_len_out<=#2 pd_head[1][48:38]; end
+                    4'bx100: begin FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; pd_ptr_ack[2]<=#2 1; headdrop_out_port<=#2 2; headdrop_pkt_len_out<=#2 pd_head[2][48:38]; end
+                    4'b1000: begin FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; pd_ptr_ack[3]<=#2 1; headdrop_out_port<=#2 3; headdrop_pkt_len_out<=#2 pd_head[3][48:38]; end
+                    endcase
+                    1: casex({headdrop_rdy[0], headdrop_rdy[3:1]}) 
+                    4'bxxx1: begin FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; pd_ptr_ack[1]<=#2 1; headdrop_out_port<=#2 1; headdrop_pkt_len_out<=#2 pd_head[1][48:38]; end
+                    4'bxx10: begin FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; pd_ptr_ack[2]<=#2 1; headdrop_out_port<=#2 2; headdrop_pkt_len_out<=#2 pd_head[2][48:38]; end
+                    4'bx100: begin FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; pd_ptr_ack[3]<=#2 1; headdrop_out_port<=#2 3; headdrop_pkt_len_out<=#2 pd_head[3][48:38]; end
+                    4'b1000: begin FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; pd_ptr_ack[0]<=#2 1; headdrop_out_port<=#2 0; headdrop_pkt_len_out<=#2 pd_head[0][48:38]; end
+                    endcase
+                    2: casex({headdrop_rdy[1:0], headdrop_rdy[3:2]}) 
+                    4'bxxx1: begin FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; pd_ptr_ack[2]<=#2 1; headdrop_out_port<=#2 2; headdrop_pkt_len_out<=#2 pd_head[2][48:38]; end
+                    4'bxx10: begin FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; pd_ptr_ack[3]<=#2 1; headdrop_out_port<=#2 3; headdrop_pkt_len_out<=#2 pd_head[3][48:38]; end
+                    4'bx100: begin FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; pd_ptr_ack[0]<=#2 1; headdrop_out_port<=#2 0; headdrop_pkt_len_out<=#2 pd_head[0][48:38]; end
+                    4'b1000: begin FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; pd_ptr_ack[1]<=#2 1; headdrop_out_port<=#2 1; headdrop_pkt_len_out<=#2 pd_head[1][48:38]; end
+                    endcase
+                    3: casex({headdrop_rdy[2:0], headdrop_rdy[3]}) 
+                    4'bxxx1: begin FQ_din_head<=#2 pd_head[3][80:65]; FQ_din_tail<=#2 pd_head[3][64:49]; pd_ptr_ack[3]<=#2 1; headdrop_out_port<=#2 3; headdrop_pkt_len_out<=#2 pd_head[3][48:38]; end
+                    4'bxx10: begin FQ_din_head<=#2 pd_head[0][80:65]; FQ_din_tail<=#2 pd_head[0][64:49]; pd_ptr_ack[0]<=#2 1; headdrop_out_port<=#2 0; headdrop_pkt_len_out<=#2 pd_head[0][48:38]; end
+                    4'bx100: begin FQ_din_head<=#2 pd_head[1][80:65]; FQ_din_tail<=#2 pd_head[1][64:49]; pd_ptr_ack[1]<=#2 1; headdrop_out_port<=#2 1; headdrop_pkt_len_out<=#2 pd_head[1][48:38]; end
+                    4'b1000: begin FQ_din_head<=#2 pd_head[2][80:65]; FQ_din_tail<=#2 pd_head[2][64:49]; pd_ptr_ack[2]<=#2 1; headdrop_out_port<=#2 2; headdrop_pkt_len_out<=#2 pd_head[2][48:38]; end
+                    endcase
+                    endcase 
+                    RR<=#2 RR + 1;
+                    state<=#2 1;
+                end
+                else begin 
+                    state<=#2 0;
+                end
             end
         end
         endcase
     end
 end
-
 
 endmodule
