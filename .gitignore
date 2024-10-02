@@ -1,0 +1,11 @@
+# mapped file
+*.v
+*.ddc
+*.sdc
+
+# report file
+*.rpt
+
+# work directory
+*.log
+*.svf
