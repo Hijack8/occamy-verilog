@@ -1,11 +1,11 @@
-*.xpr
-*.hw
-*.cache
-occamy.gen
-occamy.sim
-occamy.runs
-occamy.hw
-occamy.cache
-occamy.ip_user_files
-*.wcfg
-*.str
+# mapped file
+*.v
+*.ddc
+*.sdc
+
+# report file
+*.rpt
+
+# work directory
+*.log
+*.svf
