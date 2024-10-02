@@ -205,8 +205,8 @@ project_root/
    ```tcl
 
    proc stage_message {stage_num stage_desc is_start} {
-
-​       # 输出美观的阶段提示信息
+   
+        # 输出美观的阶段提示信息
 
    }
 
