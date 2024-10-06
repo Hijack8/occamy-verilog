@@ -210,8 +210,11 @@ module switch_core_v2 (
         .out_port   (out_port),
         .pkt_len_out(pkt_len_out),
 
+        
+        // ===============> begin arbiter 
         .cell_rd_pd_buzy  (cell_rd_pd_buzy),
         .cell_rd_cell_buzy(cell_rd_cell_buzy)
+        // ===============> end arbiter 
     );
 
     headdrop_v3 hd (
@@ -224,8 +227,10 @@ module switch_core_v2 (
         .pd_ptr_ack (pd_ptr_ack_hd),
         .pd_ptr_dout(pd_ptr_dout),
 
+        // ===============> begin arbiter 
         .cell_rd_pd_buzy  (cell_rd_pd_buzy),
         .cell_rd_cell_buzy(cell_rd_cell_buzy),
+        // ===============> end arbiter 
 
         .headdrop_out        (headdrop_out),
         .headdrop_out_port   (headdrop_out_port),

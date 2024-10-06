@@ -32,9 +32,11 @@ module headdrop_v3 (
     output reg [3:0] pd_ptr_ack,
     input [511:0] pd_ptr_dout,
 
+    // ====================> begin arbiter
     input cell_rd_pd_buzy,
     input cell_rd_cell_buzy,
 
+    // ====================> end arbiter
     output reg headdrop_out,
     output reg [3:0] headdrop_out_port,
     output reg [10:0] headdrop_pkt_len_out,
@@ -69,6 +71,7 @@ module headdrop_v3 (
                     if (rdy) begin
                         case (RR)
                             0:
+// ====================> begin headdrop_scheduler
                             casex (headdrop_rdy)
                                 4'bxxx1: begin
                                     FQ_din_head          <= #2 pd_head[0][80:65];
@@ -200,11 +203,13 @@ module headdrop_v3 (
                             endcase
                         endcase
                         RR    <= #2 RR + 1;
+// ====================> end headdrop_scheduler
                         state <= #2 1;
                     end
                 end
                 1: begin
                     pd_ptr_ack <= #2 0;
+                    // ====================> begin arbiter
                     if (cell_rd_pd_buzy) begin
                         state <= #2 0;
                     end else begin
@@ -212,12 +217,17 @@ module headdrop_v3 (
                         headdrop_out <= #2 1;
                         state        <= #2 2;
                     end
+                    // ====================> end arbiter
                 end
                 2: begin
-                    headdrop_out <= #2 0;
+                    headdrop_out <= #2 0;begin 
+                    // ====================> begin arbiter
                     if (!cell_rd_cell_buzy) begin
                         FQ_wr <= #2 0;
                         if (rdy) begin
+
+                            // ====================> end arbiter
+                            // ====================> begin headdrop_scheduler
                             case (RR)
                                 0:
                                 casex (headdrop_rdy)
@@ -351,6 +361,7 @@ module headdrop_v3 (
                                 endcase
                             endcase
                             RR    <= #2 RR + 1;
+                            // ====================> end headdrop_scheduler
                             state <= #2 1;
                         end else begin
                             state <= #2 0;
