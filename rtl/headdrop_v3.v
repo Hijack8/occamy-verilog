@@ -363,10 +363,13 @@ module headdrop_v3 (
                             RR    <= #2 RR + 1;
                             // ====================> end headdrop_scheduler
                             state <= #2 1;
+                    // ====================> end headdrop_scheduler
+                    // ====================> begin arbiter 
                         end else begin
                             state <= #2 0;
                         end
                     end
+                    // ====================> end arbiter
                 end
             endcase
         end
