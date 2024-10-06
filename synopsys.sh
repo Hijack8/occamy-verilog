@@ -4,21 +4,42 @@
 function setup_env() {
     # The function accepts two parameters:
     # $1 - Top module name (defaults to the current directory name)
-    # $2 - DC installation path (defaults to /home/rouge/Synopsys_tools/DesignCompiler2016)
+    # $2 - DC installation path (No default value, Missing lead to Wrong!)
 
-    # Set the top module name
-    if [ -n "$1" ]; then
-        export TOP_MODULE="$1"
-    else
-        export TOP_MODULE=$(basename "$(pwd)")
-    fi
+    # Check if the DC installation path is set
+    # if so, following arguments are not required and of course they will be ignored
+    # Set a judge flag
+    local flag_DC_PATH=0
+    # check all the path in the PATH environment variable
+    for path in $(echo "$PATH" | tr ':' '\n'); do
+        if [ -f "$path/dc_shell" ]; then
+            export DC_PATH="$path"
+            flag_DC_PATH=1
+            break
+        fi
+    done
 
-    # Set the DC installation path
-    if [ -n "$2" ]; then
+    # Set the DC installation path according to the argu#2 and flag
+    if [ -n "$2" ] && [ $flag_DC_PATH -eq 0 ]; then
         export DC_PATH="$2"
-    else
-        export DC_PATH="/home/rouge/Synopsys_tools/DesignCompiler2016"
+    elif [ $flag_DC_PATH -eq 0 ]; then
+        echo "ERROR: DC installation path is not set!"
+        exit 1
     fi
+
+    # Check if the TOP_MODULE is set
+    local flag_TOP_MODULE=0
+    if [ -n "$TOP_MODULE" ]; then
+        flag_TOP_MODULE=1
+    fi
+    # Set the top module name according to the argu#1 and flag
+    # Write the top module name to the environment variable
+    if [ -n "$1" ] && [ $flag_TOP_MODULE -eq 0 ]; then
+        export TOP_MODULE="$1"
+    elif [ $flag_TOP_MODULE -eq 0 ]; then
+        export TOP_MODULE=$(basename $(pwd))
+    fi
+
 
     # Get the current path
     export SYN_ROOT_PATH=$(pwd)
@@ -75,6 +96,10 @@ function run_script() {
 
 function clean_env() {
 
+    # Remove the TOP_MODULE
+    if [ -n "$TOP_MODULE" ]; then
+        unset TOP_MODULE
+    fi
 
     echo "${TAB} Cleaning execute.log..."
     if [ -f "$SYN_ROOT_PATH/execute.log" ]; then
@@ -126,10 +151,11 @@ case "$1" in
         echo "Setting environment variables..."
         shift
         setup_env "$@"
+        export TOP_MODULE
         ;;
     --run|-r)
         echo "Running script..."
-        clean_env
+        # clean_env
         run_script
         ;;
     --clean|-c)
