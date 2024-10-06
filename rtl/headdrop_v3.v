@@ -220,7 +220,7 @@ module headdrop_v3 (
                     // ====================> end arbiter
                 end
                 2: begin
-                    headdrop_out <= #2 0;begin 
+                    headdrop_out <= #2 0;
                     // ====================> begin arbiter
                     if (!cell_rd_cell_buzy) begin
                         FQ_wr <= #2 0;
