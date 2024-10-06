@@ -110,27 +110,29 @@ project_root/
 
 `setup_env` 函数设置了多个环境变量，用于指定项目中的各种路径和配置：
 
-- `TOP_MODULE`：顶层模块名称，默认为当前目录名。
+- `TOP_MODULE`：顶层模块名称，默认为当前目录名
 
-- `DC_PATH`：Design Compiler 的安装路径，默认为 `/home/rouge/Synopsys_tools/DesignCompiler2016`。
+- `DC_PATH`：Design Compiler 的安装路径，该目录下应包含 `dc_shell` 可执行文件
 
-- `SYN_ROOT_PATH`：项目的根目录，即脚本所在的当前目录。
+- `SYN_ROOT_PATH`：项目的根目录，即脚本所在的当前目录
 
-- `RTL_PATH`：Verilog 源代码目录，默认为 `$SYN_ROOT_PATH/rtl`。
+- `RTL_PATH`：Verilog 源代码目录，默认为 `$SYN_ROOT_PATH/rtl`
 
-- `WORK_PATH`：Design Compiler 的工作目录，默认为 `$SYN_ROOT_PATH/work`。
+- `WORK_PATH`：Design Compiler 的工作目录，默认为 `$SYN_ROOT_PATH/work`
 
-- `SCRIPT_PATH`：存放 TCL 脚本的目录，默认为 `$SYN_ROOT_PATH/script`。
+- `SCRIPT_PATH`：存放 TCL 脚本的目录，默认为 `$SYN_ROOT_PATH/script`
 
-- `MAPPED_PATH`：存放综合后网表的目录，默认为 `$SYN_ROOT_PATH/mapped`。
+- `MAPPED_PATH`：存放综合后网表的目录，默认为 `$SYN_ROOT_PATH/mapped`
 
-- `REPORT_PATH`：存放综合报告的目录，默认为 `$SYN_ROOT_PATH/report`。
+- `REPORT_PATH`：存放综合报告的目录，默认为 `$SYN_ROOT_PATH/report`
 
-- `LIB_PATH`：库文件目录，默认为 `$SYN_ROOT_PATH/library`。
+- `LIB_PATH`：库文件目录，默认为 `$SYN_ROOT_PATH/library`
 
 ---
 
 ## 3. 使用方法
+
+> input `alias syn="source ./synposys.sh"` in your shell, then your life will be saved.
 
 ### 3.1 设置环境变量
 
@@ -138,9 +140,13 @@ project_root/
 
 ```bash
 
-./synopsys.sh --setup [TopModuleName] [DCInstallationPath]
+source ./synopsys.sh --setup [TopModuleName] [DCInstallationPath]
 
 ```
+
+> **`source` 是对于脚本 `synopsys.sh` 的执行是必要的**
+>
+> 由于脚本需要设置环境变量（`$TOP_MODULE`），而如果以 `./synopsys.sh` 的方式运行，shell 会在子进程中设置环境变量，无法影响当前 shell 的环境
 
 - `TopModuleName`：可选参数，指定顶层模块名称，默认为当前目录名。
 
@@ -150,7 +156,7 @@ project_root/
 
 ```bash
 
-./synopsys.sh --setup my_top_module /path/to/design_compiler
+source ./synopsys.sh --setup my_top_module /path/to/design_compiler
 
 ```
 
@@ -160,13 +166,13 @@ project_root/
 
 ```bash
 
-./synopsys.sh --run
+source ./synopsys.sh --run
 
 ```
 
 该命令将执行以下操作：
 
-- 调用 `clean_env` 函数，清理之前的综合结果。
+- 继承 `setup_env` 函数设置的环境变量，如果未设置则使用默认值
 
 - 调用 `run_script` 函数，运行综合流程。
 
@@ -176,7 +182,7 @@ project_root/
 
 ```bash
 
-./synopsys.sh --clean
+source ./synopsys.sh --clean
 
 ```
 
@@ -280,7 +286,7 @@ project_root/
 
 - **环境变量**：在运行脚本之前，确保脚本中的路径和环境变量符合您的实际环境。
 
-- **Design Compiler 安装路径**：默认路径为 `/home/rouge/Synopsys_tools/DesignCompiler2016`，请根据您的实际安装位置进行修改。
+- **Design Compiler 安装路径**：根目录下的shell脚本需要指定 Design Compiler 的安装路径，在命令中指定或者其路径早已存在于你的环境变量中，这两个条件至少需要一个满足。
 
 - **许可证管理器**：确保 Synopsys 许可证管理器已正确配置和运行，以避免在运行 `dc_shell` 时出现许可证错误。
 
